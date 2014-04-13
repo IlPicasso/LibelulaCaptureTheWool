@@ -52,19 +52,9 @@ public class LangManager {
         this.plugin = plugin;
         lang = new YamlConfiguration();
         File langFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("lang-file"));
-        plugin.saveResource("spanish.yml", true); ///DEBUG
-
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
-        // QUITAR EL TRUE ANTERIOR
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
-        //////////DEBUG
+        if (!langFile.exists()) {
+            plugin.saveResource(langFile.getName(), false);
+        }
         if (langFile.exists()) {
             try {
                 lang.load(langFile);

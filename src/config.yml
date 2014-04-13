@@ -1,4 +1,4 @@
-lang-file: spanish.yml
+lang-file: english.yml
 signs:
     first-line-text: "ctw"
     first-line-text-replacement: "&1LIBELULA&4CTW"

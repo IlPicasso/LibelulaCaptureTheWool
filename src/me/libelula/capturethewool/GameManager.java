@@ -631,7 +631,9 @@ public class GameManager {
         Game game = worldGame.get(e.getWorld());
         if (game != null) {
             if (game.mapData.weather.fixed) {
-                e.getWorld().setStorm(game.mapData.weather.storm);
+                if (e.toWeatherState() != game.mapData.weather.storm) {
+                    e.getWorld().setStorm(game.mapData.weather.storm);
+                }
             }
         }
     }

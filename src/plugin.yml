@@ -1,10 +1,10 @@
 name: LibelulaUltimateCaptureTheWool
-version: "0.2.33 Beta"
+version: "0.2.37 Beta"
 main: me.libelula.capturethewool.Main
 description: Libelula Ultimate Capture The Wool
 author: Diego Lucio D'Onofrio <ddonofrio@member.fsf.org>
 website: http://libelula.me
-depend: [TagAPI, WorldGuard, WorldEdit]
+depend: [TagAPI, WorldEdit]
 
 commands:
     ctw:

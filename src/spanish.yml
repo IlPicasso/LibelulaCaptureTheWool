@@ -73,19 +73,19 @@ map-tip-bluewoolwin:
     description: "&6Ahora configura el lugar dónde el equipo &9AZUL&6 debe poner las lanas para ganar."
     help-0: "&6Para hacerlo debes escribir el comando &5/ctwsetup mapconfig bluewinwool&6 y poner las lanas."    
 map-tip-weather: 
-    description: "&6Ahora configra las condiciones meteorológicas del mapa."
+    description: "&6Ahora configura las condiciones meteorológicas del mapa."
     help-0: "Para hacelo debes usar el comando &5/ctwsetup mapconfig weather&6 con las siguientes opciones:"
     help-1: "&5/ctwsetup mapconfig weather fixed=sun&6 - Fija el clima en soleado para el mapa."   
     help-2: "&5/ctwsetup mapconfig weather fixed=storm&6 - Fija el clima en lluvia para el mapa."   
     help-3: "&5/ctwsetup mapconfig weather random&6 - El clima en este mapa será aleatorio."   
 map-tip-rednoaccess:
-    description: "&6Ahora configra las regiones dónde el equipo &cROJO&6 no puede entrar."
+    description: "&6Ahora configura las regiones dónde el equipo &cROJO&6 no puede entrar."
     help-0: "&6Para ello selecciona el area con WE y escribe &5/ctwsetup mapconfig rednoaccess&6."
 map-tip-bluenoaccess:
-    description: "&6Ahora configra las regiones dónde el equipo &9AZUL&6 no puede entrar."
+    description: "&6Ahora configura las regiones dónde el equipo &9AZUL&6 no puede entrar."
     help-0: "&6Para ello selecciona el area con WE y escribe &5/ctwsetup mapconfig bluenoaccess&6."
 map-tip-protected:
-    description: "&6Ahora configra las regiones dónde ningún equipo puede editar."
+    description: "&6Ahora configura las regiones dónde ningún equipo puede editar."
     help-0: "&6Para ello selecciona el area con WE y escribe &5/ctwsetup mapconfig protected&6."
 map-tip-woolspawner:
     description: "&6Opcionalmente puedes añader algunos \"Wool Spawners\" dónde lo desees."
@@ -95,9 +95,9 @@ map-deleted: "&aMapa eliminado con éxito."
 map-list-empty: "&6No hay ningún mapa configurado, para añadir uno ve a un mundo con &5/gotoworld&6 y luego escribe &5/ctwsetup map add&6."
 available-maps: "&aLos mapas disponibles son:"
 not-in-map: "&4Este comando solo se puede ejecutar en un mapa, si quieres que este lo sea ejecuta &5/ctwsetup map add&6."
-redspawn-set: "&aSe ha configurado con éxito el punto de aparicón del equipo &cROJO&a."
-bluespawn-set: "&aSe ha configurado con éxito el punto de aparicón del equipo &9AZUL&a."
-mapspawn-set: "&aSe ha configurado con éxito el punto de aparicón del mapa."
+redspawn-set: "&aSe ha configurado con éxito el punto de aparición del equipo &cROJO&a."
+bluespawn-set: "&aSe ha configurado con éxito el punto de aparición del equipo &9AZUL&a."
+mapspawn-set: "&aSe ha configurado con éxito el punto de aparición del mapa."
 maxplayers-set: "&aSe ha configurado el número máximo de jugadores para este mapa."
 incorrect-parameters: "&4Error en parámetros."
 area-not-selected: "&4No se ha seleccionado un área de WorldEdit."
@@ -131,8 +131,7 @@ lobby-spawnpoint-set:
     help-2: "&6para eliminarlos usa &5/ctwsetup lobby clear"
 unconfigured-lobby:
     error: "&4¡El lobby principal no está configurado! CTW no puede funcionar así."
-    help-1: "&6Para configurarlo debes cargar el mundo con &5/gotoworld&6 o bien crearlo con &5/createworld&6."
-    help-2: "&6Finalmente añadir tantos \"Spawn Points\" como quieras con &5/ctwsetup lobby addspawn"
+    help-2: "&6Ve al lobby de tu server y escribe &5/ctwsetup lobby addspawn&6 tantas veces como haga falta."
 room-added:
     message-0: "&aSala añadida con éxito."
     help-1: "&6Ahora añade uno o más mapas a esta sala con el comando: &5/ctwsetup room addmap [sala] [mapa]&6."
@@ -179,7 +178,7 @@ commands:
     createworld:
         description: "&6Este comando se usa para crear mundos vacíos."
         usage:  "&6Uso: /createworld [mundo que deseas crear]"
-        example: "&6Ejemplo: /createworld lobby"
+        example: "&6Ejemplo: /createworld LibelulaMap"
     ctwsetup:
         description: "&6Este comando se usa para configurar todo el plugin."
         help-1: "&6Para ello se usan los siguientes sub-comandos:"
@@ -227,7 +226,7 @@ commands:
         help-7: "&5/ctwsetup room addmap [sala] [mapa]&6 - añade un mapa a una sala."
         help-8: "&5/ctwsetup room removemap [sala] [mapa]&6 - quita un mapa a una sala."
     ctw:
-        description: "&6Este comando se usa para usar algunos aspectos administrativos del juego."
+        description: "&6Este comando se usa para manejar algunos aspectos administrativos del juego."
         usage: "&6Uso: /ctw [save|reload|"
         
         

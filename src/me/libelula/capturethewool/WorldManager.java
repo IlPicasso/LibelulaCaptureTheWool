@@ -478,6 +478,9 @@ public final class WorldManager {
                             }
                         }, 1);
                     } else if (src.getType() == Material.CHEST) {
+                        if (dst.getWorld().getName().equals("sala2_CastleEnd")) {
+                        plugin.getLogger().info("DEBUG: refilling chest: " + dst.getLocation());
+                        }
                         Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
                             @Override
                             public void run() {

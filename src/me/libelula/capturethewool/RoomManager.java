@@ -407,7 +407,10 @@ public final class RoomManager {
             return false;
         }
         MapManager.MapData data = plugin.mm.getMapData(getCurrentMap(roomName));
-        return data.noDropOnBreak.contains(item.getItemStack().getType());    
+        if (data.noDropOnBreak != null) {
+            return data.noDropOnBreak.contains(item.getItemStack().getType());
+        }
+        return false;
     }
 
     public String getRoom(World world) {
