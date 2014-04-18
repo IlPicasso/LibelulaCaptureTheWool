@@ -264,7 +264,6 @@ public class GameManager {
             plugin.sm.updateSigns(roomName);
             takeToSpawn(player);
             player.setScoreboard(game.board);
-
         }
     }
 
@@ -502,6 +501,14 @@ public class GameManager {
             }
         }
     }
+    
+    public void advanceGame(World world) {
+        Game game = worldGame.get(world);
+        if (game != null) {
+            game.step = 66;
+            startNewRound(game);
+        }
+    }
 
     public void checkTarget(BlockPlaceEvent e) {
         Game game = worldGame.get(e.getBlock().getWorld());
@@ -616,6 +623,7 @@ public class GameManager {
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("red-win-game"), game.world, null);
             plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
                     + "----------x -o- x----------", game.world, null);
+            game.step = 0;
             startNewRound(game);
         } else if (blueComplete) {
             plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
@@ -623,6 +631,7 @@ public class GameManager {
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("blue-win-game"), game.world, null);
             plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
                     + "----------x -o- x----------", game.world, null);
+            game.step = 0;
             startNewRound(game);
         }
     }
@@ -647,7 +656,6 @@ public class GameManager {
                     FireworkEffect.Type.BALL_LARGE);
         }
 
-        game.step = 0;
         counter++;
         game.bt = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             @Override
@@ -716,7 +724,6 @@ public class GameManager {
                             game.mapData.woolSpawners.get(woolColor).getBlockZ());
                     for (Player player : game.world.getPlayers()) {
                         if (player.getLocation().distance(loc) <= 6) {
-                            System.out.println("DEBUG: droping " + stack.toString());
                             game.world.dropItem(loc, stack);
                         }
                     }

@@ -16,7 +16,6 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package me.libelula.capturethewool;
 
 import java.io.File;
@@ -24,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -43,9 +43,8 @@ import org.kitteh.tag.TagAPI;
  *
  * @author Diego D'Onofrio
  * @version 1.0
- * 
+ *
  */
-
 public class PlayerManager {
 
     private class PlayerOptions {
@@ -72,7 +71,6 @@ public class PlayerManager {
         playerTeam = new TreeMap<>();
         _playerTeam_mutex = new ReentrantLock(true);
         helpBook = plugin.lm.getHelpBook();
-
         ItemStack menuItem = new ItemStack(Material.ENCHANTED_BOOK);
         ItemMeta im = menuItem.getItemMeta();
         im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
@@ -108,8 +106,7 @@ public class PlayerManager {
             po.viewOthersSpectators = !canSeeOthersSpectators(player);
         }
         playerOptions.put(player.getName(), po);
-        updateCanSee(player);
-        plugin.getLogger().info("Debug:" + player.getName() + "ViewOthes: " + canSeeOthersSpectators(player));
+        updatePlayerList(player);
         return po.viewOthersSpectators;
     }
 
@@ -158,7 +155,7 @@ public class PlayerManager {
             } else {
                 setSpectator(player);
             }
-            updateCanSee(player);
+            updatePlayerList(player);
             player.sendMessage(plugin.lm.getMessage("moved-to-" + teamId.name().toLowerCase()));
         } finally {
             _playerTeam_mutex.unlock();
@@ -209,14 +206,17 @@ public class PlayerManager {
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
 
-    public void updateCanSee(Player player) {
+    public void updatePlayerList(Player player) {
         boolean playerCanSeeOtherHidden = canSeeOthersSpectators(player);
         boolean playerIsSpect = isSpectator(player);
 
-        for (Player other : player.getWorld().getPlayers()) {
+        TreeSet<Player> playersInGame = new TreeSet<>(new Tools.PlayerComparator());
+        playersInGame.addAll(player.getWorld().getPlayers());
+
+        for (Player other : playersInGame) {
             boolean otherIsSpectator = isSpectator(other);
             boolean canSeeOthersSpectators = canSeeOthersSpectators(other);
-            
+
             if (playerIsSpect) {
                 if (!otherIsSpectator) {
                     other.hidePlayer(player);
@@ -230,7 +230,7 @@ public class PlayerManager {
             } else {
                 other.showPlayer(player);
             }
-            
+
             if (!otherIsSpectator) {
                 player.showPlayer(other);
             } else {
@@ -244,7 +244,6 @@ public class PlayerManager {
                     }
                 }
             }
-            
         }
     }
 
@@ -296,7 +295,7 @@ public class PlayerManager {
 
         player.setGameMode(GameMode.SURVIVAL);
 
-        updateCanSee(player);
+        updatePlayerList(player);
 
         try {
             TagAPI.refreshPlayer(player);
@@ -313,6 +312,6 @@ public class PlayerManager {
         player.setAllowFlight(true);
         player.getInventory().addItem(helpBook);
         player.getInventory().addItem(joinMenuItem);
-        updateCanSee(player);
+        updatePlayerList(player);
     }
 }

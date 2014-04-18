@@ -1,11 +1,12 @@
 name: LibelulaUltimateCaptureTheWool
-version: "0.2.37 Beta"
+version: "0.2.40 Beta"
 main: me.libelula.capturethewool.Main
 description: Libelula Ultimate Capture The Wool
 author: Diego Lucio D'Onofrio <ddonofrio@member.fsf.org>
 website: http://libelula.me
-depend: [TagAPI, WorldEdit]
-
+depend: [WorldEdit]
+softdepend: [TagAPI]
+    
 commands:
     ctw:
         description: Libelula Capture The Wool main command.
@@ -51,7 +52,6 @@ commands:
         permission-message: You don't have <permission>
     spawn:
         description: Take players to spawn points.
-        permission: ctw.join
         usage: /spawn
         permission-message: You don't have <permission>
 
@@ -76,3 +76,4 @@ permissions:
             ctw.setup: true
             ctw.join: true
             ctw.admin: true
+            ctw.ingame-extra-cmds: true

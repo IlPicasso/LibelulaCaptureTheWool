@@ -19,14 +19,23 @@
 package me.libelula.capturethewool;
 
 import com.sk89q.worldedit.bukkit.selections.Selection;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.SimpleCommandMap;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 /**
@@ -38,23 +47,61 @@ import org.bukkit.entity.Player;
 public class CommandManager implements CommandExecutor {
 
     private final Main plugin;
+    private final TreeSet<String> allowedInGameCmds;
 
     public CommandManager(Main plugin) {
         this.plugin = plugin;
+        allowedInGameCmds = new TreeSet<>();
         register();
     }
 
     private void register() {
-        plugin.getCommand("ctwsetup").setExecutor(this);
-        plugin.getCommand("gotoworld").setExecutor(this);
-        plugin.getCommand("createworld").setExecutor(this);
-        plugin.getCommand("g").setExecutor(this);
-        plugin.getCommand("join").setExecutor(this);
-        plugin.getCommand("leave").setExecutor(this);
-        plugin.getCommand("toggle").setExecutor(this);
-        plugin.getCommand("ctw").setExecutor(this);
-        if (plugin.cf.implementSpawnCmd()) {
-            plugin.getCommand("spawn").setExecutor(this);
+        plugin.saveResource("plugin.yml", true);
+        File file = new File(plugin.getDataFolder(), "plugin.yml");
+        YamlConfiguration pluginYml = new YamlConfiguration();
+        try {
+            pluginYml.load(file);
+        } catch (IOException | InvalidConfigurationException ex) {
+            plugin.getLogger().severe(ex.toString());
+            plugin.getPluginLoader().disablePlugin(plugin);
+            return;
+        }
+        file.delete();
+        for (String commandName : pluginYml.getConfigurationSection("commands").getKeys(false)) {
+            plugin.getCommand(commandName).setExecutor(this);
+            allowedInGameCmds.add(commandName);
+        }
+
+        if (!plugin.cf.implementSpawnCmd()) {
+            unRegisterBukkitCommand(plugin.getCommand("spawn"));
+        }
+    }
+
+    private static Object getPrivateField(Object object, String field) throws SecurityException,
+            NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+        Class<?> clazz = object.getClass();
+        Field objectField = clazz.getDeclaredField(field);
+        objectField.setAccessible(true);
+        Object result = objectField.get(object);
+        objectField.setAccessible(false);
+        return result;
+    }
+
+    public void unRegisterBukkitCommand(PluginCommand cmd) {
+        try {
+            Object result = getPrivateField(plugin.getServer().getPluginManager(), "commandMap");
+            SimpleCommandMap commandMap = (SimpleCommandMap) result;
+            Object map = getPrivateField(commandMap, "knownCommands");
+            @SuppressWarnings("unchecked")
+            HashMap<String, Command> knownCommands = (HashMap<String, Command>) map;
+            knownCommands.remove(cmd.getName());
+            for (String alias : cmd.getAliases()) {
+                if (knownCommands.containsKey(alias) && knownCommands.get(alias).toString().contains(plugin.getName())) {
+                    knownCommands.remove(alias);
+                }
+            }
+        } catch (SecurityException | NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+            plugin.getLogger().severe(e.toString());
         }
     }
 
@@ -68,24 +115,47 @@ public class CommandManager implements CommandExecutor {
         }
         switch (cmnd.getName()) {
             case "ctw":
-                if (args.length == 0) {
-                    plugin.lm.sendText("commands.ctwsetup", player);
+                if (args.length != 1) {
+                    plugin.lm.sendText("commands.ctw", player);
                 } else {
-
+                    switch (args[0].toLowerCase()) {
+                        case "reload":
+                            plugin.reload();
+                            plugin.lm.sendMessage("cmd-success", cs);
+                            break;
+                        case "save":
+                            plugin.save();
+                            plugin.lm.sendMessage("cmd-success", cs);
+                            break;
+                        case "mapcycle":
+                            if (player == null) {
+                                plugin.lm.sendMessage("not-in-game-cmd", player);
+                            } else {
+                                if (plugin.pm.getTeamId(player) == null) {
+                                    plugin.lm.sendMessage("not-in-game-cmd", player);
+                                } else {
+                                    plugin.gm.advanceGame(player.getWorld());
+                                }
+                            }
+                            break;
+                        default:
+                            plugin.lm.sendText("commands.ctw", player);
+                            break;
+                    }
                 }
 
                 break;
             case "spawn":
                 if (player == null) {
                     plugin.lm.sendMessage("not-in-game-cmd", player);
-                    return false;
+                    return true;
                 }
                 player.teleport(plugin.wm.getNextLobbySpawn());
                 break;
             case "ctwsetup":
                 if (player == null) {
                     plugin.lm.sendMessage("not-in-game-cmd", player);
-                    return false;
+                    return true;
                 }
                 if (args.length > 1) {
                     processCtwSetup(player, args);
@@ -653,4 +723,9 @@ public class CommandManager implements CommandExecutor {
 
         }
     }
+
+    public boolean isAllowedInGameCmd(String cmd) {
+        return allowedInGameCmds.contains(cmd);
+    }
+
 }

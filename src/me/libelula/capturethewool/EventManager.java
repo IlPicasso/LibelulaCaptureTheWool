@@ -20,6 +20,7 @@ package me.libelula.capturethewool;
 
 import java.util.TreeMap;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -41,6 +42,7 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -51,7 +53,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 import org.kitteh.tag.AsyncPlayerReceiveNameTagEvent;
 
@@ -244,6 +245,20 @@ public final class EventManager {
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+        public void onPlayerCommand(PlayerCommandPreprocessEvent e) {
+            if (plugin.pm.getTeamId(e.getPlayer()) != null) {
+                if (!plugin.hasPermission(e.getPlayer(), "ingame-extra-cmds")) {
+                    String cmd = e.getMessage().split(" ")[0].replaceFirst("/", "");
+                    if (!plugin.cm.isAllowedInGameCmd(cmd)) {
+                        e.setCancelled(true);
+                        String errorMessage = ChatColor.RED + "/" + cmd + " " + plugin.lm.getText("disabled") + ".";
+                        plugin.lm.sendMessage(errorMessage, e.getPlayer());
+                    }
+                }
+            }
+        }
+
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
         public void onPlayerChat(AsyncPlayerChatEvent e) {
             plugin.tm.playerChat(e);
         }
@@ -282,10 +297,7 @@ public final class EventManager {
             }
 
             if (!e.isCancelled()) {
-                plugin.tm.cancelSpectator(e);
-            }
-            if (!e.isCancelled()) {
-                plugin.tm.cancelSameTeam(e);
+                plugin.tm.cancelSpectatorOrSameTeam(e);
             }
         }
 

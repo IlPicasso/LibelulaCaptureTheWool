@@ -6,3 +6,14 @@ signs:
     on-invalid-map-replacement: "&4INVALID MAP"
     on-disabled-map: "&4DISABLED"
 implement-spawn-cmd: true
+ingame:
+    allowed-commands:
+        - spawn
+        - tell
+        - m
+        - msg
+        - t
+        - whisper
+        - w
+        - helpop
+        - report

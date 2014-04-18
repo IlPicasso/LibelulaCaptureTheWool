@@ -16,7 +16,6 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package me.libelula.capturethewool;
 
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
@@ -33,9 +32,8 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * @author Diego D'Onofrio
  * @version 1.0
- * 
+ *
  */
-
 public class Main extends JavaPlugin {
 
     WorldManager wm;
@@ -50,23 +48,31 @@ public class Main extends JavaPlugin {
     GameManager gm;
     ConfigManager cf;
     PlayerManager pm;
-        
+
     @Override
     public void onEnable() {
+
         lm = new LangManager(this);
         we = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
         if (we == null) {
             alert(lm.getText("we-not-enabled"));
             return;
         }
-        
+
+        try {
+            Class.forName("org.kitteh.tag.TagAPI");
+        } catch (ClassNotFoundException ex) {
+            alert(lm.getText("ta-not-enabled"));
+            return;
+        }
+
         cf = new ConfigManager(this);
         wm = new WorldManager(this);
-        pm = new PlayerManager(this);
         tm = new TeamManager(this);
+        pm = new PlayerManager(this);
 
         removeAllItems();
-        
+
         cm = new CommandManager(this);
         em = new EventManager(this);
         mm = new MapManager(this);
@@ -74,17 +80,45 @@ public class Main extends JavaPlugin {
         gm = new GameManager(this);
         rm.init();
         sm = new SignManager(this);
-        
-        alert ("Testing version for development, use it under your own risk.");
+
+        saveDefaultConfig();
+
+        alert("Testing version for development, use it under your own risk.");
+    }
+
+    public void reload() {
+        cf.load();
+        wm.load();
+        mm.load();
+        rm.load();
+        sm.load();
+    }
+
+    public void save() {
+        if (wm != null) {
+            wm.persist();
+        }
+
+        if (mm != null) {
+            mm.persist();
+        }
+
+        if (rm != null) {
+            rm.persist();
+        }
+
+        if (sm != null) {
+            sm.persists();
+        }
+
+        if (cf != null) {
+            cf.persists();
+        }
     }
 
     @Override
     public void onDisable() {
-        wm.persist();
-        mm.persist();
-        rm.persist();
-        sm.persists();
-        cf.persists();
+        save();
         moveAllToLobby();
     }
 
@@ -96,7 +130,7 @@ public class Main extends JavaPlugin {
     public boolean hasPermission(Player player, String permission) {
         return player.hasPermission("ctw." + permission);
     }
-    
+
     public ConsoleCommandSender getConsole() {
         return getServer().getConsoleSender();
     }
@@ -118,7 +152,7 @@ public class Main extends JavaPlugin {
         for (Player player : getServer().getOnlinePlayers()) {
             if (rm.isInGame(player.getWorld())) {
                 pm.dress(player);
-                player.teleport(wm.getNextLobbySpawn());        
+                player.teleport(wm.getNextLobbySpawn());
             }
         }
     }

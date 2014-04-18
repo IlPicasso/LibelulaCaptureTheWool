@@ -16,6 +16,7 @@ join-message: "&6%PLAYER% just join."
 left-message: "&6%PLAYER% left the server."
 armour-brand: "Libélula Armour"
 we-not-enabled: "WorldEdit plugin is not enabled, can't continue."
+ta-not-enabled: "TagApi plugin is not enabled, can't continue."
 moved-to-red: "&eYou have been moved to &cRED&e team"
 moved-to-blue: "&eYou have been moved to &9BLUE&e team"
 moved-to-spectator: "&eNow you are spectating"
@@ -227,8 +228,7 @@ commands:
         help-8: "&5/ctwsetup room removemap [sala] [mapa]&6 - removes a map from a game room."
     ctw:
         description: "&6This command is used to manage some administrative aspects of the game."
-        usage: "&6Usage: /ctw [save|reload]"
-        
+        usage: "&6Usage: /ctw [save|reload|mapcycle]"        
         
 help-menu-item:
     title: "&3&oSelect team"

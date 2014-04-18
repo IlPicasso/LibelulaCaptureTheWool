@@ -16,6 +16,7 @@ join-message: "&6El jugador %PLAYER% acaba de conectarse."
 left-message: "&6El jugador %PLAYER% se ha desconectado."
 armour-brand: "Armadura marca Libélula"
 we-not-enabled: "El plugin WorldEdit no está habilitado. No se puede continuar."
+ta-not-enabled: "El plugin TagApi no está habilitado. No se puede continuar."
 moved-to-red: "&eHas sido movido al equipo &cROJO"
 moved-to-blue: "&eHas sido movido al equipo &9AZUL"
 moved-to-spectator: "&eAhora eres &bespectador"
@@ -227,7 +228,7 @@ commands:
         help-8: "&5/ctwsetup room removemap [sala] [mapa]&6 - quita un mapa a una sala."
     ctw:
         description: "&6Este comando se usa para manejar algunos aspectos administrativos del juego."
-        usage: "&6Uso: /ctw [save|reload|"
+        usage: "&6Uso: /ctw [save|reload|mapcycle]"
         
         
 help-menu-item:

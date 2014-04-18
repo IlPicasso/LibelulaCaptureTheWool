@@ -49,6 +49,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
 /**
  *
@@ -283,24 +284,6 @@ public class TeamManager {
         }
     }
 
-    public void cancelSpectator(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player == false) {
-            return;
-        }
-        if (e.getEntity() instanceof Player == false) {
-            return;
-        }
-        Player player = (Player) e.getDamager();
-        if (plugin.pm.isSpectator(player)) {
-            e.setCancelled(true);
-            return;
-        }
-        player = (Player) e.getEntity();
-        if (plugin.pm.isSpectator(player)) {
-            e.setCancelled(true);
-        }
-    }
-
     public void cancelSpectator(PlayerInteractEntityEvent e) {
         if (plugin.pm.isSpectator(e.getPlayer())) {
             e.setCancelled(true);
@@ -362,12 +345,19 @@ public class TeamManager {
         return teamMenu;
     }
 
-    public void cancelSameTeam(EntityDamageByEntityEvent e) {
+    public void cancelSpectatorOrSameTeam(EntityDamageByEntityEvent e) {
+        Arrow arrow = null;
         if (e.getEntity() instanceof Player == false) {
             return;
         }
-        Player player = (Player) e.getEntity();
+        final Player player = (Player) e.getEntity();
         TeamId playerTeam = plugin.pm.getTeamId(player);
+
+        if (playerTeam == TeamId.SPECTATOR) {
+            e.setCancelled(true);
+            return;
+        }
+
         if (playerTeam == null) {
             return;
         }
@@ -376,7 +366,7 @@ public class TeamManager {
             if (e.getDamager() instanceof Arrow == false) {
                 return;
             } else {
-                Arrow arrow = (Arrow) e.getDamager();
+                arrow = (Arrow) e.getDamager();
                 if (arrow.getShooter() instanceof Player) {
                     damager = (Player) arrow.getShooter();
                 } else {
@@ -386,11 +376,18 @@ public class TeamManager {
         } else {
             damager = (Player) e.getDamager();
         }
+        
         TeamId damagerTeam = plugin.pm.getTeamId(damager);
+        
+        if (damagerTeam == TeamId.SPECTATOR) {
+            e.setCancelled(true);
+            return;
+        }
+
         if (damagerTeam == null) {
             return;
         }
-        if (damagerTeam == playerTeam) {
+        if (damagerTeam == playerTeam || playerTeam == TeamId.SPECTATOR) {
             e.setCancelled(true);
         }
     }
