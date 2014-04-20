@@ -130,7 +130,7 @@ public final class WorldManager {
     private void setDefaults(World world) {
         world.setAmbientSpawnLimit(0);
         world.setAnimalSpawnLimit(0);
-        world.setAutoSave(false);
+        world.setAutoSave(true);
         world.setDifficulty(Difficulty.EASY);
         world.setGameRuleValue("doMobSpawning", "false");
         world.setMonsterSpawnLimit(0);

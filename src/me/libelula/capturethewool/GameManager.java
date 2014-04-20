@@ -41,6 +41,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 import org.bukkit.scheduler.BukkitTask;
@@ -260,10 +261,25 @@ public class GameManager {
                     advert = plugin.lm.getText("player-join-spect");
             }
             plugin.pm.addPlayerTo(player, teamId);
-            plugin.lm.sendVerbatimTextToWorld(advert.replace("%PLAYER%", player.getName()), player.getWorld(), player);
+            //plugin.lm.sendVerbatimTextToWorld(advert.replace("%PLAYER%", player.getName()), player.getWorld(), player);
+            player.sendMessage(advert.replace("%PLAYER%", player.getName()));
             plugin.sm.updateSigns(roomName);
             takeToSpawn(player);
             player.setScoreboard(game.board);
+
+            if (teamId != TeamManager.TeamId.SPECTATOR) {
+                if (game.mapData.kitArmour) {
+                    ItemStack air = new ItemStack(Material.AIR);
+                    player.getInventory().setBoots(air);
+                    player.getInventory().setChestplate(air);
+                    player.getInventory().setHelmet(air);
+                    player.getInventory().setLeggings(air);
+                }
+
+                if (game.mapData.kitInv != null) {
+                    player.getInventory().setContents(game.mapData.kitInv.getContents());
+                }
+            }
         }
     }
 
@@ -414,12 +430,12 @@ public class GameManager {
                         sel.getNativeMaximumPoint()));
             }
         }
-        
+
         if (game.mapData.restaurationArea != null) {
-            game.restaurationArea = new CuboidSelection(game.world, 
-                        game.mapData.restaurationArea.getNativeMinimumPoint(),
-                        game.mapData.restaurationArea.getNativeMaximumPoint());
-        }        
+            game.restaurationArea = new CuboidSelection(game.world,
+                    game.mapData.restaurationArea.getNativeMinimumPoint(),
+                    game.mapData.restaurationArea.getNativeMaximumPoint());
+        }
 
         updateScoreBoard(game);
 
@@ -501,7 +517,7 @@ public class GameManager {
             }
         }
     }
-    
+
     public void advanceGame(World world) {
         Game game = worldGame.get(world);
         if (game != null) {
@@ -576,7 +592,7 @@ public class GameManager {
                 objective.getScore(op).setScore(score--);
             }
         }
-        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText(" "));
+        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("-"));
         objective.getScore(op).setScore(score--);
         op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("Red-Team"));
         objective.getScore(op).setScore(score--);

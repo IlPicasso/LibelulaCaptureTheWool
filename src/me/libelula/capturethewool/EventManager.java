@@ -53,6 +53,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 import org.kitteh.tag.AsyncPlayerReceiveNameTagEvent;
 
@@ -211,6 +213,21 @@ public final class EventManager {
                     case BLUE:
                         e.setRespawnLocation(plugin.gm.getBlueSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.BLUE);
+                        break;
+                    default:
+                        return;
+                }
+                String mapName = plugin.rm.getCurrentMap(roomName);
+                if (plugin.mm.getKitarmour(mapName)) {
+                ItemStack air = new ItemStack(Material.AIR);
+                    e.getPlayer().getInventory().setBoots(air);
+                    e.getPlayer().getInventory().setChestplate(air);
+                    e.getPlayer().getInventory().setHelmet(air);
+                    e.getPlayer().getInventory().setLeggings(air);
+                }
+                Inventory startingKit = plugin.mm.getKit(mapName);
+                if (startingKit != null) {
+                    e.getPlayer().getInventory().setContents(startingKit.getContents());
                 }
             }
         }
@@ -341,10 +358,10 @@ public final class EventManager {
             }
             e.setQuitMessage("");
             e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
-            String joinMessage = plugin.lm.getText("left-message")
+            String leftMessage = plugin.lm.getText("left-message")
                     .replace("%PLAYER%", e.getPlayer().getDisplayName());
             for (Player player : plugin.wm.getLobbyWorld().getPlayers()) {
-                plugin.lm.sendMessage(joinMessage, player);
+                plugin.lm.sendMessage(leftMessage, player);
             }
         }
 

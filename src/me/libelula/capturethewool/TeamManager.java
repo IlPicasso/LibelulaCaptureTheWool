@@ -49,7 +49,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
-import org.bukkit.util.Vector;
 
 /**
  *
@@ -425,7 +424,11 @@ public class TeamManager {
             }
         } else {
             EntityDamageEvent ede = e.getEntity().getLastDamageCause();
-            murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+            if (ede != null) {
+                murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+            } else {
+                murderText = plugin.lm.getNaturalDeathText(player, EntityDamageEvent.DamageCause.SUICIDE);
+            }
         }
 
         for (Player receiver : player.getWorld().getPlayers()) {

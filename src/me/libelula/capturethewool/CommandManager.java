@@ -437,6 +437,19 @@ public class CommandManager implements CommandExecutor {
                     return;
                 }
                 switch (args[1].toLowerCase()) {
+                    case "kit":
+                        plugin.mm.setKit(player);
+                        plugin.lm.sendMessage("starting-kit-set", player);
+                        break;
+                    case "toggleleather":
+                        if (plugin.mm.getKitarmour(player.getWorld())) {
+                            plugin.lm.sendMessage("default-armour-on", player);
+                            plugin.mm.setKitarmour(player.getWorld(), false);
+                        } else {
+                            plugin.lm.sendMessage("default-armour-off", player);
+                            plugin.mm.setKitarmour(player.getWorld(), true);
+                        }
+
                     case "removeregion":
                         plugin.mm.removeRegion(player);
                         plugin.lm.sendMessage("cmd-success", player);

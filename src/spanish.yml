@@ -1,3 +1,4 @@
+version: 1
 message-prefix: "&e[&6CTW&e]"
 RED-TEAM: "EQUIPO ROJO"
 BLUE-TEAM: "EQUIPO AZUL"
@@ -157,6 +158,9 @@ dms-true: "&aVeras los mensajes de muerte de todos."
 dms-false: "&aSolo veras los mensajes en los que estés involucrado."
 blood-true: "&aSangre activada."
 blood-false: "&aSangre desactivada."
+starting-kit-set: "&aSe ha configurado el kit inicial del juego."
+default-armour-on: "&aLos jugadores aparecerán con la armadura del color de su equipo."
+default-armour-off: "&aLos jugadores aparecerán sin armadura."
 commands:
     toggle:
         description: "&6Te permite cambiar tus opciones de visualización."
@@ -215,7 +219,9 @@ commands:
         help-11: "&5/ctwsetup mapconfig weather [fixed=[storm|sun]|random]&6 - configura el clima."
         help-12: "&5/ctwsetup mapconfig woolspawner&6 - Añade spawners de lana al mapa."
         help-14: "&5/ctwsetup mapconfig restore&6 - Define el área de restauración para todo el mapa."
-        help-15: "&5/ctwsetup mapconfig removeregion&6 - Elimina la región sobre la que se está parado."
+        help-15: "&5/ctwsetup mapconfig kit&6 - Define el quit inicial de los equipos."
+        help-16: "&5/ctwsetup mapconfig toggleleather&6 - Habilita/deshabilita la armadura por defecto."
+        help-17: "&5/ctwsetup mapconfig removeregion&6 - Elimina la región sobre la que se está parado."
     ctwsetup-room:
         description: "&6Este sub-comando se usa para configurar las salas de juego."
         help-1: "&6Los posibles parámetros son:"
@@ -229,8 +235,7 @@ commands:
     ctw:
         description: "&6Este comando se usa para manejar algunos aspectos administrativos del juego."
         usage: "&6Uso: /ctw [save|reload|mapcycle]"
-        
-        
+
 help-menu-item:
     title: "&3&oSelecciona equipo"
 help-book:
@@ -341,3 +346,4 @@ death-events:
             STARVATION: "ha muerto de hambre"
             POISON: "ha muerto envenenado"
             _OTHER_: "ha tenido una vergonzosa y dolorosa muerte"
+            

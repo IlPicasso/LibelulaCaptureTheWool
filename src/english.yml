@@ -1,3 +1,4 @@
+version: 1
 message-prefix: "&e[&6CTW&e]"
 RED-TEAM: "RED TEAM"
 BLUE-TEAM: "BLUE TEAM"
@@ -157,6 +158,9 @@ dms-true: "&aNow you'll see the death messages of all players."
 dms-false: "&aYou'll see the messages that you are involved."
 blood-true: "&aBlood enabled."
 blood-false: "&aBlood disabled."
+starting-kit-set: "&aPlayer's initial kit has been configured."
+default-armour-on: "&aPlayers will start the game with the default armour on."
+default-armour-off: "&aPlayers will start the game without any armour."
 commands:
     toggle:
         description: "&6Change your viewing options."
@@ -215,7 +219,9 @@ commands:
         help-11: "&5/ctwsetup mapconfig weather [fixed=[storm|sun]|random]&6 - sets the map weather."
         help-12: "&5/ctwsetup mapconfig woolspawner&6 - adds wool spawners to the map."
         help-14: "&5/ctwsetup mapconfig restore&6 - sets the restauration area for the map."
-        help-15: "&5/ctwsetup mapconfig removeregion&6 - deletes the configured region where you are standing."
+        help-15: "&5/ctwsetup mapconfig kit&6 - Define el quit inicial de los equipos."
+        help-16: "&5/ctwsetup mapconfig toggleleather&6 - Habilita/deshabilita la armadura por defecto."
+        help-17: "&5/ctwsetup mapconfig removeregion&6 - Elimina la región sobre la que se está parado."
     ctwsetup-room:
         description: "&6Use this sub-command to configure the game rooms."
         help-1: "&6Possible parameters are:"

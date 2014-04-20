@@ -16,7 +16,6 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package me.libelula.capturethewool;
 
 import java.io.File;
@@ -39,9 +38,8 @@ import org.bukkit.inventory.meta.BookMeta;
  *
  * @author Diego D'Onofrio
  * @version 1.0
- * 
+ *
  */
-
 public class LangManager {
 
     private final Main plugin;
@@ -60,6 +58,18 @@ public class LangManager {
                 lang.load(langFile);
             } catch (IOException | InvalidConfigurationException ex) {
                 plugin.getLogger().severe(ex.toString());
+            }
+            int langVersion = lang.getInt("version", 0);
+            if (langVersion < 1 && (langFile.getName().equals("spanish.yml")
+                    || langFile.getName().equals("english.yml"))) { // Texts must be updated.
+                File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
+                langFile.renameTo(backUpFile);
+                plugin.saveResource(langFile.getName(), true);
+                try {
+                    lang.load(langFile);
+                } catch (IOException | InvalidConfigurationException ex) {
+                    plugin.getLogger().severe(ex.toString());
+                }
             }
         } else {
             plugin.getLogger().severe("Configured language file does not exists: ".concat(langFile.getAbsolutePath()));
@@ -149,12 +159,11 @@ public class LangManager {
             receiver.sendMessage(messagePrefix + " " + text);
         }
     }
-    
+
     public void sendMessageToTeam(String label, Player player) {
         sendVerbatimMessageToTeam(getText(label), player);
     }
-    
-    
+
     public void sendVerbatimMessageToTeam(String message, Player player) {
         TeamManager.TeamId playerTeam = plugin.pm.getTeamId(player);
         for (Player receiver : player.getWorld().getPlayers()) {

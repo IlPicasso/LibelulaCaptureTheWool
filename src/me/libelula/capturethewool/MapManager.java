@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
@@ -46,8 +45,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 
@@ -95,6 +97,8 @@ public final class MapManager {
         int gracePeriodSeconds;
         TreeSet<Material> noDropOnBreak;
         Texts texts;
+        Inventory kitInv;
+        boolean kitArmour;
     }
 
     private final Main plugin;
@@ -320,11 +324,36 @@ public final class MapManager {
                 }
             }
         }
-        
+
         if (mapData.noDropOnBreak == null) {
             mapData.noDropOnBreak = new TreeSet<>(); // prevents null pointer exception
         }
 
+        if (localConfig.isSet("kit")) {
+            ConfigurationSection itemsSection = localConfig.getConfigurationSection("kit");
+            if (itemsSection != null) {
+
+                mapData.kitInv = Bukkit.createInventory(null, InventoryType.PLAYER);
+                for (String position : itemsSection.getKeys(false)) {
+                    Material mat = Material.getMaterial(itemsSection.getString(position + ".material"));
+                    int amount = itemsSection.getInt(position + ".amount");
+                    short durability = (short) itemsSection.getInt(position + ".durability");
+                    ItemStack is = new ItemStack(mat, amount, durability);
+                    ConfigurationSection enchSect = itemsSection.getConfigurationSection(position + ".enchantment");
+                    if (enchSect != null) {
+                        for (String enchantName : enchSect.getKeys(false)) {
+                            Enchantment e = Enchantment.getByName(enchantName);
+                            is.addEnchantment(e, enchSect.getInt(enchantName + ".level"));
+                        }
+                    }
+                    mapData.kitInv.setItem(Integer.parseInt(position), is);
+                }
+            }
+        }
+        
+        mapData.kitArmour = localConfig.getBoolean("kit-armour",
+                mapsConfig.getBoolean(mapName + ".kit-armour", false));
+        
         return mapData;
     }
 
@@ -410,6 +439,21 @@ public final class MapManager {
     public void persist() {
         for (String mapName : maps.keySet()) {
             MapData data = maps.get(mapName);
+
+            if (data.kitInv != null) {
+                ItemStack[] content = data.kitInv.getContents();
+                for (int i = 0; i < content.length; i++) {
+                    ItemStack is = content[i];
+                    if (is != null) {
+                        mapsConfig.set(mapName + ".kit." + i + ".material", is.getType().name());
+                        mapsConfig.set(mapName + ".kit." + i + ".amount", is.getAmount());
+                        mapsConfig.set(mapName + ".kit." + i + ".durability", is.getDurability());
+                        for (Enchantment enchantment : is.getEnchantments().keySet()) {
+                            mapsConfig.set(mapName + ".kit." + i + ".enchantment." + enchantment.getName() + ".level", is.getEnchantmentLevel(enchantment));
+                        }
+                    }
+                }
+            }
 
             if (data.maxPlayers > 0) {
                 mapsConfig.set(mapName + ".max-players", data.maxPlayers);
@@ -1121,5 +1165,46 @@ public final class MapManager {
                 }
             }
         }
+    }
+
+    public void setKit(Player player) {
+        MapData mapData = maps.get(player.getWorld().getName());
+        if (mapData == null) {
+            return;
+        }
+        mapData.kitInv = Bukkit.createInventory(null, InventoryType.PLAYER);
+        mapData.kitInv.setContents(player.getInventory().getContents());
+    }
+
+    public void setKitarmour(World world, boolean active) {
+        MapData mapData = maps.get(world.getName());
+        if (mapData == null) {
+            return;
+        }
+        mapData.kitArmour = active;
+    }
+    
+    public boolean getKitarmour(World world) {
+        MapData mapData = maps.get(world.getName());
+        if (mapData == null) {
+            return false;
+        }
+        return mapData.kitArmour;
+    }
+    
+    public boolean getKitarmour(String mapName) {
+        MapData mapData = maps.get(mapName);
+        if (mapData == null) {
+            return false;
+        }
+        return mapData.kitArmour;
+    }
+    
+    public Inventory getKit(String mapName) {
+        MapData mapData = maps.get(mapName);
+        if (mapData == null) {
+            return null;
+        }
+        return mapData.kitInv;
     }
 }
