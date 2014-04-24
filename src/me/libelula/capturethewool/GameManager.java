@@ -41,7 +41,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 import org.bukkit.scheduler.BukkitTask;
@@ -323,6 +322,19 @@ public class GameManager {
         }
     }
 
+    public void checkForSpectator(Player player) {
+
+        for (Player spectator : player.getWorld().getPlayers()) {
+            if (plugin.pm.getTeamId(spectator) != TeamManager.TeamId.SPECTATOR) {
+                continue;
+            }
+            if (player.getLocation().distance(spectator.getLocation()) < 4) {
+                spectator.teleport(spectator.getLocation().add(0, 5, 0));
+                spectator.setFlying(true);
+            }
+        }
+    }
+
     public void denyEnterToProhibitedZone(PlayerMoveEvent e) {
         TeamManager.TeamId ti = plugin.pm.getTeamId(e.getPlayer());
         if (ti == null || ti == TeamManager.TeamId.SPECTATOR) {
@@ -345,6 +357,7 @@ public class GameManager {
                                 e.getPlayer().teleport(e.getFrom());
                             }
                         }
+                        checkForSpectator(e.getPlayer());
                         break;
                     case RED:
                         for (Selection sel : game.redPhoibitedAreas) {
@@ -358,6 +371,7 @@ public class GameManager {
                                 e.getPlayer().teleport(e.getFrom());
                             }
                         }
+                        checkForSpectator(e.getPlayer());
                         break;
                 }
             }
@@ -592,7 +606,7 @@ public class GameManager {
                 objective.getScore(op).setScore(score--);
             }
         }
-        op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("-"));
+        op = plugin.getServer().getOfflinePlayer(ChatColor.AQUA + " ");
         objective.getScore(op).setScore(score--);
         op = plugin.getServer().getOfflinePlayer(plugin.lm.getText("Red-Team"));
         objective.getScore(op).setScore(score--);

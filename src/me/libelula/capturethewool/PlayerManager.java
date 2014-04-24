@@ -166,11 +166,10 @@ public class PlayerManager {
         TeamManager.TeamId teamId;
         _playerTeam_mutex.lock();
         try {
-            teamId = playerTeam.remove(player.getName());
-            plugin.tm.removeFromTeam(player, teamId);
             clearInventory(player);
             dress(player);
-
+            teamId = playerTeam.remove(player.getName());
+            plugin.tm.removeFromTeam(player, teamId);
         } finally {
             _playerTeam_mutex.unlock();
         }

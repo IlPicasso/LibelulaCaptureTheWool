@@ -116,9 +116,8 @@ public class TeamManager {
     }
 
     public void removeFromTeam(Player player, TeamId teamId) {
-        try {
+        if (teamId != null) {
             teams.get(teamId).team.removePlayer(player);
-        } catch (NullPointerException ex) {
         }
     }
 
@@ -375,9 +374,9 @@ public class TeamManager {
         } else {
             damager = (Player) e.getDamager();
         }
-        
+
         TeamId damagerTeam = plugin.pm.getTeamId(damager);
-        
+
         if (damagerTeam == TeamId.SPECTATOR) {
             e.setCancelled(true);
             return;

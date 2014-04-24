@@ -43,6 +43,7 @@ public class Tools {
         public static String check = "\u2714";
         public static String cross = "\u2715";
         public static String wool = "\u2752";
+        public static String invisible = "\u200B";
     }
 
     public static class PlayerComparator implements Comparator<Player> {

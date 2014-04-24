@@ -187,7 +187,7 @@ public final class EventManager {
     }
 
     private class GameListeners implements Listener {
-
+        
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onWeatherChange(WeatherChangeEvent e) {
             plugin.gm.ajustWeather(e);
@@ -197,7 +197,9 @@ public final class EventManager {
         public void onPlayerMove(PlayerMoveEvent e) {
             plugin.gm.denyEnterToProhibitedZone(e);
             if (!e.isCancelled()) {
-                plugin.mm.announceAreaBoundering(e);
+                if (plugin.mm.isMap(e.getPlayer().getWorld())) {
+                    plugin.mm.announceAreaBoundering(e);
+                }
             }
         }
 
@@ -219,7 +221,7 @@ public final class EventManager {
                 }
                 String mapName = plugin.rm.getCurrentMap(roomName);
                 if (plugin.mm.getKitarmour(mapName)) {
-                ItemStack air = new ItemStack(Material.AIR);
+                    ItemStack air = new ItemStack(Material.AIR);
                     e.getPlayer().getInventory().setBoots(air);
                     e.getPlayer().getInventory().setChestplate(air);
                     e.getPlayer().getInventory().setHelmet(air);
@@ -318,9 +320,8 @@ public final class EventManager {
             }
         }
 
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onPlayerInteractEntity(PlayerInteractEntityEvent e
-        ) {
+        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
             plugin.tm.cancelSpectator(e);
         }
 
