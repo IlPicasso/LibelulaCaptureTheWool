@@ -221,7 +221,8 @@ public class GameManager {
                 game = addGame(roomName);
             }
 
-            if (!plugin.hasPermission(player, "override-limit") && getPlayersIn(roomName) >= game.mapData.maxPlayers) {
+            if (teamId != TeamManager.TeamId.SPECTATOR && !plugin.hasPermission(player, "override-limit") 
+                    && getPlayersIn(roomName) >= game.mapData.maxPlayers) {
                 plugin.lm.sendMessage("no-free-slots", player);
                 return;
             }
@@ -310,7 +311,9 @@ public class GameManager {
         for (Player other : plugin.getServer().getOnlinePlayers()) {
             other.showPlayer(player);
         }
-        plugin.sm.updateSigns(roomName);
+        if (roomName != null) {
+            plugin.sm.updateSigns(roomName);
+        }
     }
 
     public int getPlayersIn(String roomName) {

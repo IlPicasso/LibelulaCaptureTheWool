@@ -82,7 +82,7 @@ public class Main extends JavaPlugin {
         sm = new SignManager(this);
 
         saveDefaultConfig();
-
+        
         alert("Testing version for development, use it under your own risk.");
     }
 

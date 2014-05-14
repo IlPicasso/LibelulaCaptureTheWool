@@ -187,7 +187,7 @@ public final class EventManager {
     }
 
     private class GameListeners implements Listener {
-        
+
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onWeatherChange(WeatherChangeEvent e) {
             plugin.gm.ajustWeather(e);
@@ -207,7 +207,11 @@ public final class EventManager {
         public void onRespawn(PlayerRespawnEvent e) {
             String roomName = plugin.rm.getRoom(e.getPlayer().getWorld());
             if (roomName != null) {
-                switch (plugin.pm.getTeamId(e.getPlayer())) {
+                TeamManager.TeamId ti = plugin.pm.getTeamId(e.getPlayer());
+                if (ti == null) {
+                    return;
+                }
+                switch (ti) {
                     case RED:
                         e.setRespawnLocation(plugin.gm.getRedSpawn(roomName));
                         plugin.pm.disguise(e.getPlayer(), TeamManager.TeamId.RED);
@@ -387,6 +391,9 @@ public final class EventManager {
                 for (Player player : plugin.wm.getLobbyWorld().getPlayers()) {
                     plugin.lm.sendMessage(joinMessage, player);
                 }
+                if (plugin.pm.getTeamId(e.getPlayer()) != null) {
+                    plugin.gm.playerLeftGame(e.getPlayer());
+                }
             }
         }
 
@@ -438,11 +445,17 @@ public final class EventManager {
             plugin.tm.cancelSpectator(e);
         }
 
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
         public void onFoodLevelChange(FoodLevelChangeEvent e) {
             plugin.tm.cancelSpectator(e);
-            if (!e.isCancelled() && e.getEntity() instanceof Player) {
+            if (e.getEntity() instanceof Player == true && !e.isCancelled()) {
                 Player player = (Player) e.getEntity();
+                TeamManager.TeamId ti = plugin.pm.getTeamId(player);
+                if (ti != null && player.getFoodLevel() > e.getFoodLevel()) {
+                    if ((Math.random() * ((10) + 1)) > 4) {
+                        e.setCancelled(true);
+                    }
+                }
             }
         }
 

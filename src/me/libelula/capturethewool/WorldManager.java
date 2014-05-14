@@ -485,7 +485,11 @@ public final class WorldManager {
                             public void run() {
                                 final Chest s = (Chest) src.getState();
                                 final Chest d = (Chest) dst.getState();
-                                d.getInventory().setContents(s.getInventory().getContents());
+                                try {
+                                    d.getInventory().setContents(s.getInventory().getContents());
+                                } catch (IllegalArgumentException ex) {
+                                    // Do nothing.
+                                }
                             }
                         }, 1);
 
