@@ -19,9 +19,14 @@
 package me.libelula.capturethewool;
 
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -36,6 +41,13 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class Main extends JavaPlugin {
 
+    public class Scores {
+
+        int death;
+        int kill;
+        int capture;
+    }
+
     WorldManager wm;
     CommandManager cm;
     EventManager em;
@@ -48,6 +60,8 @@ public class Main extends JavaPlugin {
     GameManager gm;
     ConfigManager cf;
     PlayerManager pm;
+    DBManager db;
+    Scores scores;
 
     @Override
     public void onEnable() {
@@ -83,7 +97,34 @@ public class Main extends JavaPlugin {
 
         saveDefaultConfig();
         
-        alert("Testing version for development, use it under your own risk.");
+        scores = new Scores();
+
+        File statsFile = new File(getDataFolder(), "stats.yml");
+        if (!statsFile.exists()) {
+            saveResource("stats.yml", true);
+        }
+
+        YamlConfiguration stats = new YamlConfiguration();
+        try {
+            stats.load(statsFile);
+            if (stats.getBoolean("enable")) {
+                String database = stats.getString("database.name");
+                String user = stats.getString("database.user");
+                String password = stats.getString("database.pass");
+                if (stats.getString("database.type").equalsIgnoreCase("mysql")) {
+                    db = new DBManager(this, DBManager.DBType.MySQL, database, user, password);
+                } else {
+                    db = new DBManager(this, DBManager.DBType.SQLITE, null, null, null);
+                }
+                scores.capture = stats.getInt("scores.capture");
+                scores.kill = stats.getInt("scores.kill");
+                scores.death = stats.getInt("scores.death");
+            }
+        } catch (IOException | InvalidConfigurationException | ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException ex) {
+            alert(ex.getMessage());
+            db = null;
+        }
+
     }
 
     public void reload() {

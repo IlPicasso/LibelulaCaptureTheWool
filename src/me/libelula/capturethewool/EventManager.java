@@ -41,9 +41,11 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -323,10 +325,20 @@ public final class EventManager {
                 plugin.tm.cancelSpectatorOrSameTeam(e);
             }
         }
+        
+        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        public void onPlayerFish(PlayerFishEvent e) {
+            plugin.tm.cancelSameTeam(e);
+        }
 
         @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
         public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
             plugin.tm.cancelSpectator(e);
+        }
+        
+        @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
+        public void onInventoryOpenEvent(InventoryOpenEvent e) {
+            plugin.gm.cancelProtectedChest(e);
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

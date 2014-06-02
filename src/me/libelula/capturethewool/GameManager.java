@@ -34,10 +34,14 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
@@ -173,12 +177,14 @@ public class GameManager {
     private final TreeMap<String, Game> games;
     private final TreeMap<World, Game> worldGame;
     public final Events events;
+    private final String decorator;
 
     public GameManager(Main plugin) {
         this.plugin = plugin;
         games = new TreeMap<>();
         events = new Events();
         worldGame = new TreeMap<>(new Tools.WorldComparator());
+        decorator = plugin.getConfig().getString("message-decorator");
 
         Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             @Override
@@ -212,8 +218,8 @@ public class GameManager {
      * @param player the player who must be moved into the new team.
      * @param teamId Id of the team where player must be put or null for random.
      */
-    public void movePlayerTo(Player player, TeamManager.TeamId teamId) {
-        String roomName = plugin.rm.getRoom(player.getWorld());
+    public void movePlayerTo(final Player player, TeamManager.TeamId teamId) {
+        final String roomName = plugin.rm.getRoom(player.getWorld());
         if (roomName != null) {
             Game game = games.get(roomName);
             if (game == null) {
@@ -221,7 +227,7 @@ public class GameManager {
                 game = addGame(roomName);
             }
 
-            if (teamId != TeamManager.TeamId.SPECTATOR && !plugin.hasPermission(player, "override-limit") 
+            if (teamId != TeamManager.TeamId.SPECTATOR && !plugin.hasPermission(player, "override-limit")
                     && getPlayersIn(roomName) >= game.mapData.maxPlayers) {
                 plugin.lm.sendMessage("no-free-slots", player);
                 return;
@@ -239,7 +245,7 @@ public class GameManager {
                 }
             }
 
-            String advert;
+            final String advert;
             if (teamId == null) {
                 if (game.redPlayers <= game.bluePlayers) {
                     teamId = TeamManager.TeamId.RED;
@@ -261,7 +267,17 @@ public class GameManager {
                     advert = plugin.lm.getText("player-join-spect");
             }
             plugin.pm.addPlayerTo(player, teamId);
-            //plugin.lm.sendVerbatimTextToWorld(advert.replace("%PLAYER%", player.getName()), player.getWorld(), player);
+
+            if (plugin.db != null) {
+                final String playerName = player.getName();
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        plugin.db.addEvent(playerName, "JOIN|" + roomName + "|" + advert);
+                    }
+                });
+            }
+
             player.sendMessage(advert.replace("%PLAYER%", player.getName()));
             plugin.sm.updateSigns(roomName);
             takeToSpawn(player);
@@ -284,7 +300,7 @@ public class GameManager {
     }
 
     public void playerLeftGame(Player player) {
-        String roomName = plugin.rm.getRoom(player.getWorld());
+        final String roomName = plugin.rm.getRoom(player.getWorld());
         TeamManager.TeamId teamId = plugin.pm.getTeamId(player);
         if (roomName != null && teamId != null) {
             Game game = games.get(roomName);
@@ -305,8 +321,20 @@ public class GameManager {
                     break;
             }
         }
+
         plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("player-left-map")
                 .replace("%PLAYER%", plugin.pm.getChatColor(player) + player.getName()), player.getWorld(), player);
+
+        if (plugin.db != null && roomName != null) {
+            final String playerName = player.getName();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    plugin.db.addEvent(playerName, "LEFT|" + roomName);
+                }
+            });
+        }
+
         plugin.pm.clearTeam(player);
         for (Player other : plugin.getServer().getOnlinePlayers()) {
             other.showPlayer(player);
@@ -497,6 +525,41 @@ public class GameManager {
         checkTarget(e.getPlayer(), e.getItem().getItemStack());
     }
 
+    public void cancelProtectedChest(InventoryOpenEvent e) {
+        Player player = (Player) e.getPlayer();
+        Game game = worldGame.get(player.getWorld());
+        if (game != null && (e.getInventory().getHolder() instanceof Chest
+                || e.getInventory().getHolder() instanceof DoubleChest)) {
+            TeamManager.TeamId teamId = plugin.pm.getTeamId(player);
+            Location chestLocation;
+            if (e.getInventory().getHolder() instanceof Chest) {
+                Chest chest = (Chest) e.getInventory().getHolder();
+                chestLocation = chest.getLocation();
+            } else {
+                DoubleChest chest = (DoubleChest) e.getInventory().getHolder();
+                chestLocation = chest.getLocation();
+            }
+            switch (teamId) {
+                case BLUE:
+                    for (Selection sel : game.bluePhoibitedAreas) {
+                        if (sel.contains(chestLocation)) {
+                            e.setCancelled(true);
+                            break;
+                        }
+                    }
+                    break;
+                case RED:
+                    for (Selection sel : game.redPhoibitedAreas) {
+                        if (sel.contains(chestLocation)) {
+                            e.setCancelled(true);
+                            break;
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
     public void checkTarget(Player player, ItemStack is) {
         Game game = worldGame.get(player.getWorld());
         if (game != null) {
@@ -509,7 +572,7 @@ public class GameManager {
             }
             if (is.getType() == Material.WOOL) {
                 Wool wool = new Wool(is.getTypeId(), is.getData().getData());
-                String message = plugin.lm.getText("wool-pickup-message")
+                final String message = plugin.lm.getText("wool-pickup-message")
                         .replace("%PLAYER%", plugin.pm.getChatColor(player) + player.getName())
                         .replace("%WOOL%", Tools.toChatColor(wool.getColor()) + wool.getColor().name());
                 switch (plugin.pm.getTeamId(player)) {
@@ -531,6 +594,16 @@ public class GameManager {
                         break;
                 }
 
+                if (plugin.db != null) {
+                    final String playerName = player.getName();
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                        @Override
+                        public void run() {
+                            plugin.db.addEvent(playerName, "WOOL-PICKUP|" + message);
+                        }
+                    });
+                }
+
             }
         }
     }
@@ -544,9 +617,9 @@ public class GameManager {
     }
 
     public void checkTarget(BlockPlaceEvent e) {
-        Game game = worldGame.get(e.getBlock().getWorld());
+        final Game game = worldGame.get(e.getBlock().getWorld());
         if (game != null) {
-            Target t = game.targets.get(e.getBlock().getLocation());
+            final Target t = game.targets.get(e.getBlock().getLocation());
 
             if (t != null) {
                 if (e.getBlock().getType() == Material.WOOL) {
@@ -559,18 +632,36 @@ public class GameManager {
                         e.setCancelled(false);
                         t.completed = true;
 
-                        plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                                + "----------x -o- x----------", e.getBlock().getWorld(), null);
-                        plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("win-wool-placed")
+                        if (!decorator.isEmpty()) {
+                            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                                    + decorator, e.getBlock().getWorld(), null);
+                        }
+
+                        final String winText = plugin.lm.getText("win-wool-placed")
                                 .replace("%PLAYER%", e.getPlayer().getName())
-                                .replace("%WOOL%", t.color.toString()), e.getBlock().getWorld(), null);
+                                .replace("%WOOL%", t.color.toString());
+                        plugin.lm.sendVerbatimTextToWorld(winText, e.getBlock().getWorld(), null);
                         checkForWin(game);
-                        plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                                + "----------x -o- x----------", e.getBlock().getWorld(), null);
+
+                        if (!decorator.isEmpty()) {
+                            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                                    + decorator, e.getBlock().getWorld(), null);
+                        }
+
                         Tools.firework(plugin, e.getBlock().getLocation(),
                                 wool.getColor().getColor(), wool.getColor().getColor(), wool.getColor().getColor(),
                                 FireworkEffect.Type.BALL_LARGE);
                         updateScoreBoard(game);
+                        if (plugin.db != null) {
+                            final String playerName = e.getPlayer().getName();
+                            Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    plugin.db.addEvent(playerName, "WOOL-CAPTURE|" + t.color.toString() + "|" + game.roomName + "|" + winText);
+                                    plugin.db.incScore(playerName, plugin.scores.capture);
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -651,19 +742,27 @@ public class GameManager {
             }
         }
         if (redComplete) {
-            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                    + "----------x -o- x----------", game.world, null);
+            if (!decorator.isEmpty()) {
+                plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                        + decorator, game.world, null);
+            }
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("red-win-game"), game.world, null);
-            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                    + "----------x -o- x----------", game.world, null);
+            if (!decorator.isEmpty()) {
+                plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                        + decorator, game.world, null);
+            }
             game.step = 0;
             startNewRound(game);
         } else if (blueComplete) {
-            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                    + "----------x -o- x----------", game.world, null);
+            if (!decorator.isEmpty()) {
+                plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                        + decorator, game.world, null);
+            }
             plugin.lm.sendVerbatimTextToWorld(plugin.lm.getText("blue-win-game"), game.world, null);
-            plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
-                    + "----------x -o- x----------", game.world, null);
+            if (!decorator.isEmpty()) {
+                plugin.lm.sendVerbatimTextToWorld(ChatColor.GOLD + "" + ChatColor.BOLD
+                        + decorator, game.world, null);
+            }
             game.step = 0;
             startNewRound(game);
         }

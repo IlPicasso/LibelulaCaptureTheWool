@@ -40,6 +40,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -343,6 +344,18 @@ public class TeamManager {
         return teamMenu;
     }
 
+    public void cancelSameTeam(PlayerFishEvent e) {
+        if (e.getCaught() instanceof Player) {
+            Player damager = e.getPlayer();
+            Player player = (Player) e.getCaught();
+            TeamId playerTeam = plugin.pm.getTeamId(player);
+            TeamId damagerTeam = plugin.pm.getTeamId(damager);
+            if (playerTeam == damagerTeam) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
     public void cancelSpectatorOrSameTeam(EntityDamageByEntityEvent e) {
         Arrow arrow = null;
         if (e.getEntity() instanceof Player == false) {
@@ -387,7 +400,9 @@ public class TeamManager {
         }
         if (damagerTeam == playerTeam || playerTeam == TeamId.SPECTATOR) {
             e.setCancelled(true);
+            return;
         }
+        plugin.pm.setLastDamager(player, damager);
     }
 
     public void manageDeath(PlayerDeathEvent e) {
@@ -412,7 +427,7 @@ public class TeamManager {
             }
         }
 
-        String murderText;
+        final String murderText;
         if (killer != null) {
             if (blockDistance == 0) {
                 ItemStack is = killer.getItemInHand();
@@ -424,7 +439,21 @@ public class TeamManager {
         } else {
             EntityDamageEvent ede = e.getEntity().getLastDamageCause();
             if (ede != null) {
-                murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                if (e.getEntity().getLastDamageCause().getCause() == EntityDamageEvent.DamageCause.VOID) {
+                    String killerName = plugin.pm.getLastDamager(player);
+                    if (killerName != null) {
+                        killer = plugin.getServer().getPlayer(killerName);
+                        if (killer != null) {
+                            murderText = plugin.lm.getMurderText(player, killer, null);
+                        } else {
+                            murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                        }
+                    } else {
+                        murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                    }
+                } else {
+                    murderText = plugin.lm.getNaturalDeathText(player, ede.getCause());
+                }
             } else {
                 murderText = plugin.lm.getNaturalDeathText(player, EntityDamageEvent.DamageCause.SUICIDE);
             }
@@ -438,6 +467,36 @@ public class TeamManager {
                 }
             }
             receiver.sendMessage(murderText);
+        }
+
+        if (plugin.db != null) {
+            final String playerName = player.getName();
+            if (killer != null) {
+                final String killerName = killer.getName();
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        plugin.db.addEvent(killerName, playerName, "KILL|" + murderText);
+                        plugin.db.incScore(killerName, plugin.scores.kill);
+                    }
+                });
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        plugin.db.addEvent(playerName, killerName, "DEAD|" + murderText);
+                        plugin.db.incScore(playerName, plugin.scores.death);
+                    }
+                });
+            } else {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        plugin.db.addEvent(playerName, "SUICIDE|" + murderText);
+                        plugin.db.incScore(playerName, plugin.scores.death);
+                    }
+                });
+            }
+
         }
 
     }

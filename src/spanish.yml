@@ -1,4 +1,4 @@
-version: 1
+version: 2
 message-prefix: "&e[&6CTW&e]"
 RED-TEAM: "EQUIPO ROJO"
 BLUE-TEAM: "EQUIPO AZUL"
@@ -328,6 +328,7 @@ death-events:
             DIAMOND_SWORD: "con una filosa espada de diamantes."
             IRON_SWORD: "a golpe de su pesada espada de hierro."
             AIR: "con sus propias manos."
+            PULL: "tirándolo fuera de este mundo."
             _OTHER_: "brutalmente."
         range:
             HEADSHOT: "dándole en la cabeza con una flecha (%DISTANCE% bloques)"

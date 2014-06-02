@@ -343,7 +343,7 @@ public final class MapManager {
                     if (enchSect != null) {
                         for (String enchantName : enchSect.getKeys(false)) {
                             Enchantment e = Enchantment.getByName(enchantName);
-                            is.addEnchantment(e, enchSect.getInt(enchantName + ".level"));
+                            is.addUnsafeEnchantment(e, enchSect.getInt(enchantName + ".level"));
                         }
                     }
                     mapData.kitInv.setItem(Integer.parseInt(position), is);

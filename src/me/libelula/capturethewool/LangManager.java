@@ -60,7 +60,7 @@ public class LangManager {
                 plugin.getLogger().severe(ex.toString());
             }
             int langVersion = lang.getInt("version", 0);
-            if (langVersion < 1 && (langFile.getName().equals("spanish.yml")
+            if (langVersion < 2 && (langFile.getName().equals("spanish.yml")
                     || langFile.getName().equals("english.yml"))) { // Texts must be updated.
                 File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
                 langFile.renameTo(backUpFile);
@@ -180,9 +180,14 @@ public class LangManager {
         ret = ret.replace("%KILLED%", player.getName());
         ret = ret.replace("%KILLER_COLOR%", plugin.pm.getChatColor(killer) + "");
         ret = ret.replace("%KILLED_COLOR%", plugin.pm.getChatColor(player) + "");
-        String how = lang.getString("death-events.by-player.melee.".concat(is.getType().name()));
-        if (how == null) {
-            how = lang.getString("death-events.by-player.melee._OTHER_");
+        String how;
+        if (is != null) {
+            how = lang.getString("death-events.by-player.melee.".concat(is.getType().name()));
+            if (how == null) {
+                how = lang.getString("death-events.by-player.melee._OTHER_");
+            }
+        } else {
+            how = lang.getString("death-events.by-player.melee.PULL");
         }
         ret = ret.replace("%HOW%", how);
         return ret;

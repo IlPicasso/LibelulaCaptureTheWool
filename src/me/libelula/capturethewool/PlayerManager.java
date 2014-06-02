@@ -20,8 +20,11 @@ package me.libelula.capturethewool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
@@ -62,12 +65,14 @@ public class PlayerManager {
     private final ReentrantLock _playerTeam_mutex;
     private final ItemStack helpBook;
     private final ItemStack joinMenuItem;
+    private final TreeMap<String, Map.Entry<Long, String>> lastDamager;
 
     public PlayerManager(Main plugin) {
         playersFile = new File(plugin.getDataFolder(), "players.yml");
         playersConfig = new YamlConfiguration();
         this.plugin = plugin;
         playerOptions = new TreeMap<>();
+        lastDamager = new TreeMap<>();
         playerTeam = new TreeMap<>();
         _playerTeam_mutex = new ReentrantLock(true);
         helpBook = plugin.lm.getHelpBook();
@@ -76,6 +81,23 @@ public class PlayerManager {
         im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
         menuItem.setItemMeta(im);
         joinMenuItem = menuItem;
+    }
+
+    public void setLastDamager(Player player, Player damager) {
+        Map.Entry<Long, String> entry = new AbstractMap.SimpleEntry<>(new Date().getTime(), damager.getName());
+        lastDamager.put(player.getName(), entry);
+    }
+
+    public String getLastDamager(Player player) {
+        String ret = null;
+        Map.Entry<Long, String> entry = lastDamager.remove(player.getName());
+        if (entry != null) {
+            long upTo = new Date().getTime() - (1000 * 10);
+            if (entry.getKey() > upTo) {
+                ret = entry.getValue();
+            }
+        }
+        return ret;
     }
 
     public ItemStack getMenuItem() {

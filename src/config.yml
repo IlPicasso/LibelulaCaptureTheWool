@@ -17,3 +17,5 @@ ingame:
         - w
         - helpop
         - report
+
+message-decorator: ""
