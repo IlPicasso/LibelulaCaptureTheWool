@@ -389,7 +389,6 @@ public final class RoomManager {
         } else {
             room.mapIndex++;
         }
-        
     }
 
     public boolean isInGame(World world) {

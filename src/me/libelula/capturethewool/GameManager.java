@@ -24,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -36,7 +38,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -151,6 +152,11 @@ public class GameManager {
         boolean completed;
     }
 
+    public enum GameState {
+
+        IN_GAME, FINISHED, WAITING_FOR_PLAYERS, NOT_IN_GAME
+    }
+
     protected class Game {
 
         String roomName;
@@ -165,11 +171,13 @@ public class GameManager {
         final TreeSet<Selection> redPhoibitedAreas;
         private Selection restaurationArea;
         private Scoreboard board;
+        private GameState state;
 
         public Game() {
             bluePhoibitedAreas = new TreeSet<>(new Tools.SelectionComparator());
             redPhoibitedAreas = new TreeSet<>(new Tools.SelectionComparator());
             board = Bukkit.getScoreboardManager().getNewScoreboard();
+            state = GameState.IN_GAME;
         }
     }
 
@@ -192,6 +200,32 @@ public class GameManager {
                 spawnWool(games);
             }
         }, 300, 300);
+
+        Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+            @Override
+            public void run() {
+                controlPlayers();
+            }
+        }, 40, 40);
+    }
+
+    private void controlPlayers() {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            if (plugin.pm.getTeamId(player) == null) {
+                if (plugin.mm.isMap(player.getWorld())
+                        && !player.hasPermission("ctw.admin")) {
+                    plugin.getLogger().log(Level.INFO, "Unexpected event: Player {0} has no team and was on {1}",
+                            new Object[]{player.getName(), player.getWorld().getName()});
+                    player.teleport(plugin.wm.getNextLobbySpawn());
+                }
+            } else {
+                if (!plugin.rm.isInGame(player.getWorld())) {
+                    plugin.getLogger().log(Level.INFO, "Unexpected event: Player {0} has team and was on {1}",
+                            new Object[]{player.getName(), player.getWorld().getName()});
+                    plugin.pm.clearTeam(player);
+                }
+            }
+        }
     }
 
     public void movePlayerToRoom(Player player, String roomName) {
@@ -223,7 +257,7 @@ public class GameManager {
         if (roomName != null) {
             Game game = games.get(roomName);
             if (game == null) {
-                plugin.getLogger().warning("Improvising non-created game: " + roomName + " (please report)");
+                plugin.getLogger().log(Level.WARNING, "Improvising non-created game: {0} (please report)", roomName);
                 game = addGame(roomName);
             }
 
@@ -305,7 +339,7 @@ public class GameManager {
         if (roomName != null && teamId != null) {
             Game game = games.get(roomName);
             if (game == null) {
-                plugin.getLogger().warning("Improvising non-created game: " + roomName + " (please report)");
+                plugin.getLogger().log(Level.WARNING, "Improvising non-created game: {0} (please report)", roomName);
                 game = addGame(roomName);
             }
             switch (teamId) {
@@ -425,6 +459,15 @@ public class GameManager {
         }
         return new Location(game.world, game.mapData.blueSpawn.getBlockX(),
                 game.mapData.blueSpawn.getBlockY(), game.mapData.blueSpawn.getBlockZ());
+    }
+
+    public GameState getState(String roomName) {
+        Game game = games.get(roomName);
+        if (game == null) {
+            return GameState.NOT_IN_GAME;
+        } else {
+            return game.state;
+        }
     }
 
     /**
@@ -780,12 +823,20 @@ public class GameManager {
     }
 
     private void startNewRound(final Game game) {
+        game.state = GameState.FINISHED;
         for (Player player : game.world.getPlayers()) {
-            plugin.pm.addPlayerTo(player, TeamManager.TeamId.SPECTATOR);
             player.getInventory().clear();
-            Tools.firework(plugin, player.getLocation(),
-                    Color.GREEN, Color.RED, Color.BLUE,
-                    FireworkEffect.Type.BALL_LARGE);
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            if (plugin.getConfig().getBoolean("user-fireworks-on-win")) {
+                Tools.firework(plugin, player.getLocation(),
+                        Color.GREEN, Color.RED, Color.BLUE,
+                        FireworkEffect.Type.BALL_LARGE);
+            }
+            if (!player.isFlying()) {
+                player.teleport(player.getLocation().add(0, 0.4, 0));
+            }
         }
 
         counter++;
@@ -820,18 +871,30 @@ public class GameManager {
                                     + "----------x 1 x----------", game.world, null);
                             break;
                         case 76:
+
+                            final TreeMap<Player, TeamManager.TeamId> currentTeams = new TreeMap<>(new Tools.PlayerComparator());
                             plugin.rm.swapMap(game.roomName);
                             for (Player player : game.world.getPlayers()) {
+                                TeamManager.TeamId teamId = plugin.pm.getTeamId(player);
+                                currentTeams.put(player, teamId);
                                 player.teleport(plugin.rm.getCurrentWorld(game.roomName).getSpawnLocation());
                             }
+
+                            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    for (Player player : currentTeams.keySet()) {
+                                        plugin.gm.movePlayerTo(player, currentTeams.get(player));
+                                    }
+                                }
+                            }, 10);
+
                             plugin.gm.removeGame(game.roomName);
-                            plugin.gm.addGame(game.roomName);
+                            Game newGame = plugin.gm.addGame(game.roomName);
+                            newGame.state = GameState.IN_GAME;
                             break;
                         case 77:
                             plugin.lm.sendMessageToWorld("starting-new-game", game.world, null);
-                            for (Player player : plugin.rm.getNextWorld(game.roomName).getPlayers()) {
-                                plugin.gm.movePlayerTo(player, TeamManager.TeamId.SPECTATOR);
-                            }
                             break;
                         case 80:
                             break;
@@ -845,17 +908,20 @@ public class GameManager {
         }, 10, 10);
     }
 
-    static private void spawnWool(TreeMap<String, Game> games) {
+    private void spawnWool(TreeMap<String, Game> games) {
         for (Game game : games.values()) {
             if (game.mapData.woolSpawners != null) {
                 for (String woolColor : game.mapData.woolSpawners.keySet()) {
                     DyeColor dyeColor = DyeColor.valueOf(woolColor);
                     Wool wool = new Wool(dyeColor);
                     ItemStack stack = wool.toItemStack(1);
-                    Location loc = new Location(game.world, game.mapData.woolSpawners.get(woolColor).getBlockX(), game.mapData.woolSpawners.get(woolColor).getBlockY(),
+                    Location loc = new Location(game.world,
+                            game.mapData.woolSpawners.get(woolColor).getBlockX(),
+                            game.mapData.woolSpawners.get(woolColor).getBlockY(),
                             game.mapData.woolSpawners.get(woolColor).getBlockZ());
                     for (Player player : game.world.getPlayers()) {
-                        if (player.getLocation().distance(loc) <= 6) {
+                        if (player.getLocation().distance(loc) <= 6
+                                && !plugin.pm.isSpectator(player)) {
                             game.world.dropItem(loc, stack);
                         }
                     }

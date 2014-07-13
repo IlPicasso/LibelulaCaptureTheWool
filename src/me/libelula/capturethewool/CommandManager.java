@@ -18,6 +18,7 @@
  */
 package me.libelula.capturethewool;
 
+import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.IOException;
@@ -449,7 +450,7 @@ public class CommandManager implements CommandExecutor {
                             plugin.lm.sendMessage("default-armour-off", player);
                             plugin.mm.setKitarmour(player.getWorld(), true);
                         }
-
+                        break;
                     case "removeregion":
                         plugin.mm.removeRegion(player);
                         plugin.lm.sendMessage("cmd-success", player);
@@ -515,6 +516,9 @@ public class CommandManager implements CommandExecutor {
                                 plugin.lm.sendMessage("area-not-selected", player);
                                 return;
                             } else {
+                                sel = new CuboidSelection(sel.getWorld(),
+                                        sel.getMinimumPoint().subtract(1, 1, 1),
+                                        sel.getMaximumPoint().add(1, 1, 1));
                                 if (plugin.mm.isProtectedArea(player.getWorld(), sel)) {
                                     plugin.lm.sendMessage("area-na-already-protected", player);
                                     return;

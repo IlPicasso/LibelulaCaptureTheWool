@@ -223,6 +223,7 @@ public class PlayerManager {
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(20);
         player.setFoodLevel(20);
+        player.setFireTicks(0);
         clearInventory(player);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
     }
@@ -315,6 +316,7 @@ public class PlayerManager {
         player.getInventory().setHelmet(helmet);
 
         player.setGameMode(GameMode.SURVIVAL);
+        player.setFireTicks(0);
 
         updatePlayerList(player);
 

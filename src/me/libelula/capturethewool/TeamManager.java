@@ -357,7 +357,7 @@ public class TeamManager {
     }
 
     public void cancelSpectatorOrSameTeam(EntityDamageByEntityEvent e) {
-        Arrow arrow = null;
+        Arrow arrow;
         if (e.getEntity() instanceof Player == false) {
             return;
         }
@@ -406,6 +406,16 @@ public class TeamManager {
     }
 
     public void manageDeath(PlayerDeathEvent e) {
+        if (!plugin.rm.isInGame(e.getEntity().getWorld())) {
+            return;
+        }
+        
+        String roomName = plugin.rm.getRoom(e.getEntity().getWorld());
+        if (plugin.gm.getState(roomName) != GameManager.GameState.IN_GAME) {
+            e.getEntity().setHealth(20);
+            return;
+        }
+        
         Player player = e.getEntity();
         Player killer = null;
         int blockDistance = 0;

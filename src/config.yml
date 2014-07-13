@@ -19,3 +19,4 @@ ingame:
         - report
 
 message-decorator: ""
+user-fireworks-on-win: true
