@@ -1,4 +1,4 @@
-version: 2
+version: 4
 message-prefix: "&e[&6CTW&e]"
 RED-TEAM: "EQUIPO ROJO"
 BLUE-TEAM: "EQUIPO AZUL"
@@ -161,6 +161,13 @@ blood-false: "&aSangre desactivada."
 starting-kit-set: "&aSe ha configurado el kit inicial del juego."
 default-armour-on: "&aLos jugadores aparecerán con la armadura del color de su equipo."
 default-armour-off: "&aLos jugadores aparecerán sin armadura."
+block-spleaf: "&eEl jugador %DAMAGER%&e ha roto el suelo dónde %VICTIM%&e estaba apoyado."
+repeated-material-warn: "&eCUIDADO: ¡Uno o más materiales se encuentran repetidos en tu inventario!"
+repeated-material-info: "&eEste comando solo configura el tipo de material y no uno específico."
+repeated-material-example: "&ePor ejemplo, si añades una lana, sin importar el color, no se soltará ninguna lana en todo el mapa."
+repeated-material-ok: "&eSe han configurado los materiales de tu inventario para no ser soltados en este mapa."
+cmd-in-a-not-ctw-map: "&4Este comando solo se puede ejecutar dentro de un mapa de CTW."
+no-drop-is-empty: "&eEn este mapa se soltarán todos los materiales."
 commands:
     toggle:
         description: "&6Te permite cambiar tus opciones de visualización."
@@ -222,6 +229,7 @@ commands:
         help-15: "&5/ctwsetup mapconfig kit&6 - Define el quit inicial de los equipos."
         help-16: "&5/ctwsetup mapconfig toggleleather&6 - Habilita/deshabilita la armadura por defecto."
         help-17: "&5/ctwsetup mapconfig removeregion&6 - Elimina la región sobre la que se está parado."
+        help-18: "&5/ctwsetup mapconfig no-drop&6 - Configura el tipo de materiales que no caerán al suelo."
     ctwsetup-room:
         description: "&6Este sub-comando se usa para configurar las salas de juego."
         help-1: "&6Los posibles parámetros son:"

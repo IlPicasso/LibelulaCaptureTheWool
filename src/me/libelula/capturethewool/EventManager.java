@@ -43,6 +43,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -191,6 +192,12 @@ public final class EventManager {
     private class GameListeners implements Listener {
 
         @EventHandler(priority = EventPriority.HIGHEST)
+        public void PlayerBucketEmptyEvent(PlayerBucketEmptyEvent e) {
+            plugin.gm.events.cancelUseBukketOnProtectedAreas(e);
+
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST)
         public void onWeatherChange(WeatherChangeEvent e) {
             plugin.gm.ajustWeather(e);
         }
@@ -242,7 +249,6 @@ public final class EventManager {
 
         @EventHandler(priority = EventPriority.HIGHEST)
         public void onDeath(PlayerDeathEvent e) {
-            e.setDeathMessage("");
             plugin.tm.manageDeath(e);
         }
 
@@ -298,10 +304,25 @@ public final class EventManager {
             }
 
             if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)
+                    && e.getClickedBlock().getType() == Material.WORKBENCH
+                    && !e.getPlayer().isSneaking()) {
+                if (plugin.pm.getTeamId(e.getPlayer()) != null) {
+                    e.setCancelled(true);
+                    e.getPlayer().openWorkbench(null, true);
+                }
+
+            }
+
+            if (e.isCancelled()) {
+                return;
+            }
+
+            if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)
                     || e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
                 if (e.getClickedBlock().getType() == Material.WALL_SIGN
                         || e.getClickedBlock().getType() == Material.SIGN_POST) {
                     plugin.sm.checkForPlayerJoin(e);
+
                 }
             }
         }
@@ -325,7 +346,7 @@ public final class EventManager {
                 plugin.tm.cancelSpectatorOrSameTeam(e);
             }
         }
-        
+
         @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
         public void onPlayerFish(PlayerFishEvent e) {
             plugin.tm.cancelSameTeam(e);
@@ -335,7 +356,7 @@ public final class EventManager {
         public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
             plugin.tm.cancelSpectator(e);
         }
-        
+
         @EventHandler(ignoreCancelled = false, priority = EventPriority.HIGHEST)
         public void onInventoryOpenEvent(InventoryOpenEvent e) {
             plugin.gm.cancelProtectedChest(e);
@@ -383,7 +404,7 @@ public final class EventManager {
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onJoinEvent(PlayerJoinEvent e) {
+        public void onJoinEvent(final PlayerJoinEvent e) {
             World lobbyWorld = plugin.wm.getLobbyWorld();
             if (lobbyWorld == null) {
                 if (plugin.hasPermission(e.getPlayer(), "setup")) {
@@ -397,7 +418,14 @@ public final class EventManager {
                 }
             } else {
                 e.setJoinMessage("");
-                e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
+
+                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        e.getPlayer().teleport(plugin.wm.getNextLobbySpawn());
+                    }
+                }, 10);
+
                 String joinMessage = plugin.lm.getText("join-message")
                         .replace("%PLAYER%", e.getPlayer().getDisplayName());
                 for (Player player : plugin.wm.getLobbyWorld().getPlayers()) {
@@ -424,11 +452,32 @@ public final class EventManager {
         public void onBlockBreakEvent(BlockBreakEvent e) {
             plugin.tm.cancelSpectator(e);
             plugin.gm.events.cancelEditProtectedAreas(e);
-            /*
-             if (!e.isCancelled()) {
-             plugin.wm.addModificationPoint(e.getBlock().getLocation());
-             }
-             */
+            if (!e.isCancelled()) {
+                if (plugin.pm.getTeamId(e.getPlayer()) != null) {
+                    for (Player other : e.getPlayer().getWorld().getPlayers()) {
+                        if (other.getName().equals(e.getPlayer().getName())) {
+                            continue;
+                        }
+                        if (other.getLocation().getBlockX() == e.getBlock().getLocation().getBlockX()
+                                && other.getLocation().getBlockY() >= e.getBlock().getLocation().getBlockY()
+                                && other.getLocation().getBlockY() < e.getBlock().getLocation().getBlockY() + 2
+                                && other.getLocation().getBlockZ() == e.getBlock().getLocation().getBlockZ()
+                                && e.getBlock().getType().isSolid()){
+
+                            
+                            
+                            String spleafText = plugin.lm.getText("block-spleaf");
+
+                            plugin.lm.sendVerbatimTextToWorld(
+                                    spleafText.replace("%DAMAGER%",
+                                            plugin.pm.getChatColor(e.getPlayer()) + e.getPlayer().getName())
+                                    .replace("%VICTIM%",
+                                            plugin.pm.getChatColor(other) + other.getName()), other.getWorld(), null);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

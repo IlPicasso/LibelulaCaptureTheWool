@@ -1,4 +1,4 @@
-version: 2
+version: 4
 message-prefix: "&e[&6CTW&e]"
 RED-TEAM: "RED TEAM"
 BLUE-TEAM: "BLUE TEAM"
@@ -161,6 +161,13 @@ blood-false: "&aBlood disabled."
 starting-kit-set: "&aPlayer's initial kit has been configured."
 default-armour-on: "&aPlayers will start the game with the default armour on."
 default-armour-off: "&aPlayers will start the game without any armour."
+block-spleaf: "&ePlayer %DAMAGER%&e He has broken the ground where %VICTIM%&e stood."
+repeated-material-warn: "&eWARNING: One or more materials are repeated in your inventory."
+repeated-material-info: "&eThis command only sets a kind of material, not a specific one."
+repeated-material-example: "&eFor example, if you add a wool, any color of wool will not be dropped."
+repeated-material-ok: "&eNon drop material has been set for this map."
+cmd-in-a-not-ctw-map: "&4This command must be executed in a CTW map world."
+no-drop-is-empty: "&eAll kind of materials will be droped on this map."
 commands:
     toggle:
         description: "&6Change your viewing options."
@@ -222,6 +229,7 @@ commands:
         help-15: "&5/ctwsetup mapconfig kit&6 - Define el quit inicial de los equipos."
         help-16: "&5/ctwsetup mapconfig toggleleather&6 - Habilita/deshabilita la armadura por defecto."
         help-17: "&5/ctwsetup mapconfig removeregion&6 - Elimina la región sobre la que se está parado."
+        help-18: "&5/ctwsetup mapconfig no-drop&6 - Sets the kind of materials which will not be dropped."
     ctwsetup-room:
         description: "&6Use this sub-command to configure the game rooms."
         help-1: "&6Possible parameters are:"

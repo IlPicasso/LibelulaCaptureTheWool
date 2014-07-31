@@ -575,13 +575,13 @@ public final class MapManager {
                 List<String> materialList = new ArrayList<>();
                 for (Material material : data.noDropOnBreak) {
                     materialList.add(material.name());
-                    mapsConfig.set(mapName + ".grace-period", data.gracePeriodSeconds);
-                    mapsConfig.set(mapName + ".info.authors", data.texts.authors);
-                    mapsConfig.set(mapName + ".info.description", data.texts.description);
-                    mapsConfig.set(mapName + ".announce.at-begining", data.texts.atBeginingAnnounce);
-                    mapsConfig.set(mapName + ".announce.at-finish", data.texts.atFinishedAnnounce);
-                    mapsConfig.set(mapName + ".announce.at-start", data.texts.atStartAnnounce);
                 }
+                mapsConfig.set(mapName + ".grace-period", data.gracePeriodSeconds);
+                mapsConfig.set(mapName + ".info.authors", data.texts.authors);
+                mapsConfig.set(mapName + ".info.description", data.texts.description);
+                mapsConfig.set(mapName + ".announce.at-begining", data.texts.atBeginingAnnounce);
+                mapsConfig.set(mapName + ".announce.at-finish", data.texts.atFinishedAnnounce);
+                mapsConfig.set(mapName + ".announce.at-start", data.texts.atStartAnnounce);
                 mapsConfig.set(mapName + ".no-drop-on-break", materialList);
             }
 
@@ -1059,6 +1059,37 @@ public final class MapManager {
         }
         mapData.restaurationArea = sel;
     }
+    
+    public boolean setNoDrop(Player player) {
+        boolean ret = false;
+        MapData mapData = maps.get(player.getWorld().getName());
+        if (mapData != null) {
+            TreeSet<Material> noDrop = new TreeSet<>();
+            boolean warn = false;
+            for (ItemStack is: player.getInventory().getContents()) {
+                if (is == null){
+                    continue;
+                }
+                if (!warn && noDrop.contains(is.getType())) {
+                    warn=true;
+                    plugin.lm.sendMessage("repeated-material-warn", player);
+                    plugin.lm.sendMessage("repeated-material-info", player);
+                    plugin.lm.sendMessage("repeated-material-example", player);
+                } else {
+                    noDrop.add(is.getType());
+                }
+            }
+            if (noDrop.isEmpty()) {
+                plugin.lm.sendMessage("no-drop-is-empty", player);
+            }
+            mapData.noDropOnBreak = noDrop;
+            ret = true;
+        } else {
+            plugin.lm.sendMessage("cmd-in-a-not-ctw-map", player);
+        }
+        return ret;
+    }
+    
 
     public void announceAreaBoundering(PlayerMoveEvent e) {
         MapData mapData = maps.get(e.getTo().getWorld().getName());

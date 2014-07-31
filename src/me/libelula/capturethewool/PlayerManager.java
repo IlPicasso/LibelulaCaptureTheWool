@@ -66,7 +66,9 @@ public class PlayerManager {
     private final ItemStack helpBook;
     private final ItemStack joinMenuItem;
     private final TreeMap<String, Map.Entry<Long, String>> lastDamager;
-
+    private final TreeSet<String> falseSpectators;
+    
+    
     public PlayerManager(Main plugin) {
         playersFile = new File(plugin.getDataFolder(), "players.yml");
         playersConfig = new YamlConfiguration();
@@ -81,6 +83,16 @@ public class PlayerManager {
         im.setDisplayName(plugin.lm.getText("help-menu-item.title"));
         menuItem.setItemMeta(im);
         joinMenuItem = menuItem;
+        falseSpectators = new TreeSet<>();
+    }
+    
+    public void setFalseSpectator(Player player) {
+        _playerTeam_mutex.lock();
+        try {
+            falseSpectators.add(player.getName());
+        } finally {
+            _playerTeam_mutex.unlock();
+        }
     }
 
     public void setLastDamager(Player player, Player damager) {
@@ -165,6 +177,7 @@ public class PlayerManager {
 
     public void addPlayerTo(Player player, TeamManager.TeamId teamId) {
         _playerTeam_mutex.lock();
+        falseSpectators.remove(player.getName());
         try {
             TeamManager.TeamId previousTeam = playerTeam.put(player.getName(), teamId);
             if (previousTeam != null) {
@@ -187,6 +200,7 @@ public class PlayerManager {
     public TeamManager.TeamId clearTeam(Player player) {
         TeamManager.TeamId teamId;
         _playerTeam_mutex.lock();
+        falseSpectators.remove(player.getName());
         try {
             clearInventory(player);
             dress(player);
@@ -203,8 +217,18 @@ public class PlayerManager {
     }
 
     public boolean isSpectator(Player player) {
+        boolean resp = false;
         TeamManager.TeamId teamId = playerTeam.get(player.getName());
-        return teamId != null && teamId == TeamManager.TeamId.SPECTATOR;
+        if (teamId != null) {
+            if (teamId != TeamManager.TeamId.SPECTATOR) {
+                if (falseSpectators.contains(player.getName())) {
+                    resp = true;
+                }
+            } else {
+                resp = true;
+            }
+        }
+        return resp;
     }
 
     public void clearInventory(Player player) {
@@ -217,6 +241,7 @@ public class PlayerManager {
         for (PotionEffect effect : player.getActivePotionEffects()) {
             player.removePotionEffect(effect.getType());
         }
+        player.setFireTicks(0);
     }
 
     public void dress(Player player) {

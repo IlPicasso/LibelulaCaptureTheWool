@@ -40,18 +40,19 @@ import org.bukkit.inventory.meta.BookMeta;
  * @version 1.0
  *
  */
-public class LangManager {
+public final class LangManager {
 
     private final Main plugin;
     private final YamlConfiguration lang;
     private final String messagePrefix;
+    private final int minVersion = 4;
 
     public LangManager(Main plugin) {
         this.plugin = plugin;
         lang = new YamlConfiguration();
         File langFile = new File(plugin.getDataFolder(), plugin.getConfig().getString("lang-file"));
         if (!langFile.exists()) {
-            plugin.saveResource(langFile.getName(), false);
+            saveDefaultLangFiles();
         }
         if (langFile.exists()) {
             try {
@@ -60,8 +61,9 @@ public class LangManager {
                 plugin.getLogger().severe(ex.toString());
             }
             int langVersion = lang.getInt("version", 0);
-            if (langVersion < 2 && (langFile.getName().equals("spanish.yml")
-                    || langFile.getName().equals("english.yml"))) { // Texts must be updated.
+            if (langVersion < minVersion && (langFile.getName().equals("spanish.yml")
+                    || langFile.getName().equals("english.yml"))
+                    || langFile.getName().equals("italian.yml")) { // Texts must be updated.
                 File backUpFile = new File(langFile.getParent(), langFile.getName() + "-" + langVersion + ".bak");
                 langFile.renameTo(backUpFile);
                 plugin.saveResource(langFile.getName(), true);
@@ -75,6 +77,22 @@ public class LangManager {
             plugin.getLogger().severe("Configured language file does not exists: ".concat(langFile.getAbsolutePath()));
         }
         messagePrefix = ChatColor.translateAlternateColorCodes('&', lang.getString("message-prefix"));
+    }
+    
+    public void saveDefaultLangFiles() {
+        File defaultLangFile;
+        defaultLangFile = new File(plugin.getDataFolder(), "spanish.yml");
+        if (!defaultLangFile.exists()) {
+            plugin.saveResource(defaultLangFile.getName(), false);
+        }
+        defaultLangFile = new File(plugin.getDataFolder(), "english.yml");
+        if (!defaultLangFile.exists()) {
+            plugin.saveResource(defaultLangFile.getName(), false);
+        }
+        defaultLangFile = new File(plugin.getDataFolder(), "italian.yml");
+        if (!defaultLangFile.exists()) {
+            plugin.saveResource(defaultLangFile.getName(), false);
+        }
     }
 
     public String getText(String label) {

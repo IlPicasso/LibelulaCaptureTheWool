@@ -18,7 +18,6 @@
  */
 package me.libelula.capturethewool;
 
-import com.sk89q.worldedit.bukkit.selections.CuboidSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
 import java.io.File;
 import java.io.IOException;
@@ -516,9 +515,6 @@ public class CommandManager implements CommandExecutor {
                                 plugin.lm.sendMessage("area-not-selected", player);
                                 return;
                             } else {
-                                sel = new CuboidSelection(sel.getWorld(),
-                                        sel.getMinimumPoint().subtract(1, 1, 1),
-                                        sel.getMaximumPoint().add(1, 1, 1));
                                 if (plugin.mm.isProtectedArea(player.getWorld(), sel)) {
                                     plugin.lm.sendMessage("area-na-already-protected", player);
                                     return;
@@ -580,6 +576,11 @@ public class CommandManager implements CommandExecutor {
                         }
                         plugin.mm.setRestaurationArea(sel);
                         plugin.lm.sendMessage("cmd-success", player);
+                        break;
+                    case "no-drop":
+                        if (plugin.mm.setNoDrop(player)) {
+                            plugin.lm.sendMessage("cmd-success", player);
+                        }
                         break;
                     default:
                         plugin.lm.sendText("commands.ctwsetup-mapconfig", player);

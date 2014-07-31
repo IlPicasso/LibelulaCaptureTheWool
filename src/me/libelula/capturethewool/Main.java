@@ -151,10 +151,6 @@ public class Main extends JavaPlugin {
         if (sm != null) {
             sm.persists();
         }
-
-        if (cf != null) {
-            cf.persists();
-        }
     }
 
     @Override

@@ -53,6 +53,7 @@ public class ConfigManager {
         if (reload) {
             plugin.reloadConfig();
         }
+        
         validateSignText(getSignFirstLine(), "signs.first-line-text", "ctw");
                 validateSignText(getSignFirstLineReplacement(), "signs.first-line-text-replacement",
                 "&1LIBELULA&4CTW");

@@ -20,3 +20,4 @@ ingame:
 
 message-decorator: ""
 user-fireworks-on-win: true
+keep-teams-on-win: true

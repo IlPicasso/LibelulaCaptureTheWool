@@ -43,6 +43,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
@@ -112,6 +113,20 @@ public class GameManager {
                 } else {
                     TeamManager.TeamId ti = plugin.pm.getTeamId(e.getPlayer());
                     if (isProhibitedLocation(e.getBlock().getLocation(), ti, game)) {
+                        e.setCancelled(true);
+                    }
+                }
+            }
+        }
+
+        public void cancelUseBukketOnProtectedAreas(PlayerBucketEmptyEvent e) {
+            Game game = worldGame.get(e.getBlockClicked().getWorld());
+            if (game != null) {
+                if (isProtected(e.getBlockClicked(), game)) {
+                    e.setCancelled(true);
+                } else {
+                    TeamManager.TeamId ti = plugin.pm.getTeamId(e.getPlayer());
+                    if (isProhibitedLocation(e.getBlockClicked().getLocation(), ti, game)) {
                         e.setCancelled(true);
                     }
                 }
@@ -824,18 +839,24 @@ public class GameManager {
 
     private void startNewRound(final Game game) {
         game.state = GameState.FINISHED;
+
         for (Player player : game.world.getPlayers()) {
-            player.getInventory().clear();
-            player.setGameMode(GameMode.ADVENTURE);
-            player.setAllowFlight(true);
-            player.setFlying(true);
-            if (plugin.getConfig().getBoolean("user-fireworks-on-win")) {
-                Tools.firework(plugin, player.getLocation(),
-                        Color.GREEN, Color.RED, Color.BLUE,
-                        FireworkEffect.Type.BALL_LARGE);
-            }
-            if (!player.isFlying()) {
-                player.teleport(player.getLocation().add(0, 0.4, 0));
+            if (plugin.getConfig().getBoolean("keep-teams-on-win")) {
+                player.setGameMode(GameMode.ADVENTURE);
+                plugin.pm.clearInventory(player);
+                plugin.pm.setFalseSpectator(player);
+                player.setAllowFlight(true);
+                player.setFlying(true);
+                if (plugin.getConfig().getBoolean("user-fireworks-on-win")) {
+                    Tools.firework(plugin, player.getLocation(),
+                            Color.GREEN, Color.RED, Color.BLUE,
+                            FireworkEffect.Type.BALL_LARGE);
+                }
+                if (!player.isOnGround()) {
+                    player.teleport(player.getLocation().add(0, 0.5, 0));
+                }
+            } else {
+                plugin.pm.addPlayerTo(player, TeamManager.TeamId.SPECTATOR);
             }
         }
 

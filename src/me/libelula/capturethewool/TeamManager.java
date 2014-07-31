@@ -362,12 +362,13 @@ public class TeamManager {
             return;
         }
         final Player player = (Player) e.getEntity();
-        TeamId playerTeam = plugin.pm.getTeamId(player);
 
-        if (playerTeam == TeamId.SPECTATOR) {
+        if (plugin.pm.isSpectator(player)) {
             e.setCancelled(true);
             return;
         }
+
+        TeamId playerTeam = plugin.pm.getTeamId(player);
 
         if (playerTeam == null) {
             return;
@@ -388,12 +389,12 @@ public class TeamManager {
             damager = (Player) e.getDamager();
         }
 
-        TeamId damagerTeam = plugin.pm.getTeamId(damager);
-
-        if (damagerTeam == TeamId.SPECTATOR) {
+        if (plugin.pm.isSpectator(damager)) {
             e.setCancelled(true);
             return;
         }
+        
+        TeamId damagerTeam = plugin.pm.getTeamId(damager);
 
         if (damagerTeam == null) {
             return;
@@ -415,7 +416,9 @@ public class TeamManager {
             e.getEntity().setHealth(20);
             return;
         }
-        
+
+        e.setDeathMessage("");
+
         Player player = e.getEntity();
         Player killer = null;
         int blockDistance = 0;
