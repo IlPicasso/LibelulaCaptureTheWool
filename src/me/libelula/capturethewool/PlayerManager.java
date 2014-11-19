@@ -356,7 +356,7 @@ public class PlayerManager {
         player.setHealth(20);
         player.setFoodLevel(20);
         plugin.pm.clearInventory(player);
-        player.setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(GameMode.CREATIVE);
         player.setAllowFlight(true);
         player.getInventory().addItem(helpBook);
         player.getInventory().addItem(joinMenuItem);
